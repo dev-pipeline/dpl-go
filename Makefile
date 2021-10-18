@@ -1,6 +1,6 @@
 TARGETS := dpl
 
-.PHONY: all clean format ${TARGETS}
+.PHONY: all clean format test ${TARGETS}
 
 all: ${TARGETS}
 
@@ -12,3 +12,6 @@ format:
 
 dpl:
 	go build -o ${@}
+
+test:
+	go test -race ./...

@@ -1,7 +1,12 @@
 package cmd
 
 import (
+	"fmt"
+	"regexp"
+
 	"github.com/spf13/cobra"
+
+	"github.com/dev-pipeline/dpl-go/internal/dpl"
 )
 
 var (
@@ -26,7 +31,29 @@ var (
 	}
 )
 
+type InvalidComponentNameError struct {
+	Name string
+}
+
+func (icne *InvalidComponentNameError) Error() string {
+	return fmt.Sprintf("Invalid name: %v", icne.Name)
+}
+
 func doConfigure(cmd *cobra.Command, args []string) {
+}
+
+func validateComponentName(component *dpl.Component) error {
+	matched, err := regexp.Match("^([a-zA-Z](?:([-_])?[a-zA-Z0-9])+)+$", []byte(component.Name))
+
+	if err != nil {
+		return err
+	}
+	if !matched {
+		return &InvalidComponentNameError{
+			Name: component.Name,
+		}
+	}
+	return nil
 }
 
 func init() {
@@ -51,4 +78,6 @@ func init() {
 	reconfigureCmd.PersistentFlags().StringSliceVar(&profiles, "profile", []string{},
 		"Apply a profile")
 	rootCmd.AddCommand(reconfigureCmd)
+
+	dpl.RegisterComponentValidator("component-name", validateComponentName)
 }
