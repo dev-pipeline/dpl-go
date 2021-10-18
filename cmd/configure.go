@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/dev-pipeline/dpl-go/internal/dpl"
+	"github.com/dev-pipeline/dpl-go/pkg/dpl"
 )
 
 var (
@@ -79,5 +80,5 @@ func init() {
 		"Apply a profile")
 	rootCmd.AddCommand(reconfigureCmd)
 
-	dpl.RegisterComponentValidator("component-name", validateComponentName)
+	dplint.RegisterComponentValidator("component-name", validateComponentName)
 }

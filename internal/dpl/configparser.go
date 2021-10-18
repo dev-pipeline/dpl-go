@@ -1,15 +1,17 @@
-package dpl
+package dplint
 
 import (
 	"errors"
 	"fmt"
 
 	"gopkg.in/ini.v1"
+
+	"github.com/dev-pipeline/dpl-go/pkg/dpl"
 )
 
-type ProjectValidator func(*Project) error
+type ProjectValidator func(*dpl.Project) error
 
-type ComponentValidator func(*Component) error
+type ComponentValidator func(*dpl.Component) error
 
 type ComponentValidationError struct {
 	ValidatorName string
@@ -36,7 +38,7 @@ func RegisterProjectValidator(name string, validator ProjectValidator) error {
 	return nil
 }
 
-func validateComponent(component *Component) error {
+func validateComponent(component *dpl.Component) error {
 	for name, validator := range componentValidators {
 		err := validator(component)
 		if err != nil {
@@ -49,7 +51,7 @@ func validateComponent(component *Component) error {
 	return nil
 }
 
-func validateProject(project *Project) error {
+func validateProject(project *dpl.Project) error {
 	for name, validator := range projectValidators {
 		err := validator(project)
 		if err != nil {
@@ -59,11 +61,11 @@ func validateProject(project *Project) error {
 	return nil
 }
 
-func applyConfig(config *ini.File) (*Project, error) {
-	project := NewProject()
+func applyConfig(config *ini.File) (*dpl.Project, error) {
+	project := dpl.NewProject()
 	for _, component := range config.Sections() {
 		if component.Name() != ini.DEFAULT_SECTION {
-			projectComponent := NewComponent(component.Name())
+			projectComponent := dpl.NewComponent(component.Name())
 			for _, key := range component.Keys() {
 				projectComponent.Data[key.Name()] = key.Value()
 			}
@@ -82,7 +84,7 @@ func applyConfig(config *ini.File) (*Project, error) {
 	return project, nil
 }
 
-func LoadRawConfig(data []byte) (*Project, error) {
+func LoadRawConfig(data []byte) (*dpl.Project, error) {
 	config, err := ini.Load(data)
 	if err != nil {
 		return nil, err
@@ -90,7 +92,7 @@ func LoadRawConfig(data []byte) (*Project, error) {
 	return applyConfig(config)
 }
 
-func LoadProjectConfig(path string) (*Project, error) {
+func LoadProjectConfig(path string) (*dpl.Project, error) {
 	config, err := ini.Load(path)
 
 	if err != nil {

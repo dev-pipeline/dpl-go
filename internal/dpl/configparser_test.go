@@ -1,4 +1,4 @@
-package dpl
+package dplint
 
 import (
 	"fmt"
