@@ -73,7 +73,7 @@ func applyConfig(config *ini.File) (*dpl.Project, error) {
 			if err != nil {
 				return nil, err
 			}
-			project.Components[component.Name()] = projectComponent
+			project.ComponentInfo[component.Name()] = projectComponent
 		}
 	}
 	err := validateProject(project)

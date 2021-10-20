@@ -5,13 +5,15 @@ type Component struct {
 	Data map[string]string
 }
 
+type Components map[string]*Component
+
 type Project struct {
-	Components map[string]*Component
+	ComponentInfo Components
 }
 
 func NewProject() *Project {
 	return &Project{
-		Components: make(map[string]*Component),
+		ComponentInfo: make(Components),
 	}
 }
 
