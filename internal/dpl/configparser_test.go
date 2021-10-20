@@ -21,11 +21,11 @@ func TestParseSimple(t *testing.T) {
 		t.Fatalf("%v", err)
 	}
 
-	if len(project.ComponentInfo) != 2 {
+	if len(project.Components()) != 2 {
 		t.Fatalf("Wrong number of components (expected %v)", 2)
 	}
 	for _, name := range componentNames {
-		_, found := project.ComponentInfo[name]
+		_, found := project.GetComponent(name)
 		if !found {
 			t.Fatalf("Missing component %v", name)
 		}

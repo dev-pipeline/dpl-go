@@ -19,14 +19,14 @@ func insertKey(componentTask string, reverseDeps reverseDependencies) {
 	}
 }
 
-func addDeps(project *Project, target string, tasks []string, reverseDeps reverseDependencies) error {
-	component, _ := project.ComponentInfo[target]
+func addDeps(project Project, target string, tasks []string, reverseDeps reverseDependencies) error {
+	component, _ := project.GetComponent(target)
 	for index, task := range tasks {
 		depKey := fmt.Sprintf("depends.%v", task)
 		componentTask := makeComponentTask(target, task)
 		insertKey(componentTask, reverseDeps)
 
-		rawDepends, found := component.Data[depKey]
+		rawDepends, found := component.GetValue(depKey)
 		if found {
 			// we have dependencies
 			splitDepends := strings.Split(rawDepends, ",")
@@ -44,15 +44,10 @@ func addDeps(project *Project, target string, tasks []string, reverseDeps revers
 	return nil
 }
 
-func makeReverseDependencies(project *Project, targets []string, tasks []string) (reverseDependencies, error) {
+func makeReverseDependencies(project Project, targets []string, tasks []string) (reverseDependencies, error) {
 	reverseDeps := make(reverseDependencies)
 	for _, target := range targets {
 		addDeps(project, target, tasks, reverseDeps)
-		/*
-			for index, task := range tasks[1:] {
-				addDeps(project, target, task, reverseDeps)
-			}
-		*/
 	}
 	return reverseDeps, nil
 }

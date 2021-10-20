@@ -8,6 +8,37 @@ var (
 	exists struct{}
 )
 
+type resolveComponent struct {
+	data map[string]string
+}
+
+func (rs *resolveComponent) Name() string {
+	return ""
+}
+
+func (rs *resolveComponent) GetValue(key string) (string, bool) {
+	value, found := rs.data[key]
+	return value, found
+}
+
+type resolveComponents map[string]resolveComponent
+
+type resolveProject struct {
+	components resolveComponents
+}
+
+func (rp *resolveProject) GetComponent(name string) (Component, bool) {
+	component, found := rp.components[name]
+	if found {
+		return &component, true
+	}
+	return nil, false
+}
+
+func (rp *resolveProject) Components() []string {
+	return nil
+}
+
 func compareDeps(t *testing.T, expected reverseDependencies, actual reverseDependencies) {
 	if len(expected) != len(actual) {
 		t.Fatalf("Unexpected size (%v vs %v)", len(expected), len(actual))
@@ -31,11 +62,9 @@ func compareDeps(t *testing.T, expected reverseDependencies, actual reverseDepen
 
 func TestSingleReverseDeps(t *testing.T) {
 	targets := []string{"foo"}
-	project := &Project{
-		ComponentInfo: Components{
-			targets[0]: &Component{
-				Name: targets[0],
-			},
+	project := &resolveProject{
+		components: resolveComponents{
+			targets[0]: resolveComponent{},
 		},
 	}
 	tasks := []string{"build"}
@@ -53,11 +82,9 @@ func TestSingleReverseDeps(t *testing.T) {
 
 func TestMultipleTasks(t *testing.T) {
 	targets := []string{"foo"}
-	project := &Project{
-		ComponentInfo: Components{
-			targets[0]: &Component{
-				Name: targets[0],
-			},
+	project := &resolveProject{
+		components: resolveComponents{
+			targets[0]: resolveComponent{},
 		},
 	}
 	tasks := []string{"checkout", "build"}
@@ -78,14 +105,10 @@ func TestMultipleTasks(t *testing.T) {
 
 func TestIndependentReverseDeps(t *testing.T) {
 	targets := []string{"foo", "bar"}
-	project := &Project{
-		ComponentInfo: Components{
-			targets[0]: &Component{
-				Name: targets[0],
-			},
-			targets[1]: &Component{
-				Name: targets[1],
-			},
+	project := &resolveProject{
+		components: resolveComponents{
+			targets[0]: resolveComponent{},
+			targets[1]: resolveComponent{},
 		},
 	}
 	tasks := []string{"build"}
@@ -104,14 +127,11 @@ func TestIndependentReverseDeps(t *testing.T) {
 
 func TestLinearReverseDeps(t *testing.T) {
 	targets := []string{"foo", "bar"}
-	project := &Project{
-		ComponentInfo: Components{
-			targets[0]: &Component{
-				Name: targets[0],
-			},
-			targets[1]: &Component{
-				Name: targets[1],
-				Data: map[string]string{
+	project := &resolveProject{
+		components: resolveComponents{
+			targets[0]: resolveComponent{},
+			targets[1]: resolveComponent{
+				data: map[string]string{
 					"depends.build": "foo",
 				},
 			},
@@ -135,14 +155,11 @@ func TestLinearReverseDeps(t *testing.T) {
 
 func TestImplicitComponentTasks(t *testing.T) {
 	targets := []string{"foo", "bar"}
-	project := &Project{
-		ComponentInfo: Components{
-			targets[0]: &Component{
-				Name: targets[0],
-			},
-			targets[1]: &Component{
-				Name: targets[1],
-				Data: map[string]string{
+	project := &resolveProject{
+		components: resolveComponents{
+			targets[0]: resolveComponent{},
+			targets[1]: resolveComponent{
+				data: map[string]string{
 					"depends.build": "foo",
 				},
 			},
@@ -172,26 +189,21 @@ func TestImplicitComponentTasks(t *testing.T) {
 
 func TestDiamondReverseDeps(t *testing.T) {
 	targets := []string{"foo", "bar", "baz", "biz"}
-	project := &Project{
-		ComponentInfo: Components{
-			targets[0]: &Component{
-				Name: targets[0],
-			},
-			targets[1]: &Component{
-				Name: targets[1],
-				Data: map[string]string{
+	project := &resolveProject{
+		components: resolveComponents{
+			targets[0]: resolveComponent{},
+			targets[1]: resolveComponent{
+				data: map[string]string{
 					"depends.build": "foo",
 				},
 			},
-			targets[2]: &Component{
-				Name: targets[2],
-				Data: map[string]string{
+			targets[2]: resolveComponent{
+				data: map[string]string{
 					"depends.build": "foo",
 				},
 			},
-			targets[3]: &Component{
-				Name: targets[3],
-				Data: map[string]string{
+			targets[3]: resolveComponent{
+				data: map[string]string{
 					"depends.build": "bar,baz",
 				},
 			},

@@ -43,15 +43,15 @@ func (icne *InvalidComponentNameError) Error() string {
 func doConfigure(cmd *cobra.Command, args []string) {
 }
 
-func validateComponentName(component *dpl.Component) error {
-	matched, err := regexp.Match("^([a-zA-Z](?:([-_])?[a-zA-Z0-9])+)+$", []byte(component.Name))
+func validateComponentName(component dpl.Component) error {
+	matched, err := regexp.Match("^([a-zA-Z](?:([-_])?[a-zA-Z0-9])+)+$", []byte(component.Name()))
 
 	if err != nil {
 		return err
 	}
 	if !matched {
 		return &InvalidComponentNameError{
-			Name: component.Name,
+			Name: component.Name(),
 		}
 	}
 	return nil

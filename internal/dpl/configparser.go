@@ -9,9 +9,9 @@ import (
 	"github.com/dev-pipeline/dpl-go/pkg/dpl"
 )
 
-type ProjectValidator func(*dpl.Project) error
+type ProjectValidator func(dpl.Project) error
 
-type ComponentValidator func(*dpl.Component) error
+type ComponentValidator func(dpl.Component) error
 
 type ComponentValidationError struct {
 	ValidatorName string
@@ -38,7 +38,7 @@ func RegisterProjectValidator(name string, validator ProjectValidator) error {
 	return nil
 }
 
-func validateComponent(component *dpl.Component) error {
+func validateComponent(component dpl.Component) error {
 	for name, validator := range componentValidators {
 		err := validator(component)
 		if err != nil {
@@ -51,7 +51,7 @@ func validateComponent(component *dpl.Component) error {
 	return nil
 }
 
-func validateProject(project *dpl.Project) error {
+func validateProject(project dpl.Project) error {
 	for name, validator := range projectValidators {
 		err := validator(project)
 		if err != nil {
@@ -61,30 +61,66 @@ func validateProject(project *dpl.Project) error {
 	return nil
 }
 
-func applyConfig(config *ini.File) (*dpl.Project, error) {
-	project := dpl.NewProject()
+type IniComponent struct {
+	config *ini.Section
+}
+
+func (ic *IniComponent) Name() string {
+	return ic.config.Name()
+}
+
+func (ic *IniComponent) GetValue(name string) (string, bool) {
+	if ic.config.HasValue(name) {
+		return ic.config.Key(name).Value(), true
+	}
+	return "", false
+}
+
+type IniProject struct {
+	config *ini.File
+}
+
+func (ip *IniProject) GetComponent(name string) (dpl.Component, bool) {
+	if name == ini.DEFAULT_SECTION {
+		return nil, false
+	}
+	component, err := ip.config.GetSection(name)
+	if err != nil {
+		return nil, false
+	}
+	return &IniComponent{
+		config: component,
+	}, true
+}
+
+func (ip *IniProject) Components() []string {
+	return ip.config.SectionStrings()[1:]
+}
+
+func applyConfig(config *ini.File) (dpl.Project, error) {
+	project := IniProject{
+		config: config,
+	}
 	for _, component := range config.Sections() {
 		if component.Name() != ini.DEFAULT_SECTION {
-			projectComponent := dpl.NewComponent(component.Name())
-			for _, key := range component.Keys() {
-				projectComponent.Data[key.Name()] = key.Value()
+			projectComponent := IniComponent{
+				config: component,
 			}
-			err := validateComponent(projectComponent)
+			err := validateComponent(&projectComponent)
 			if err != nil {
 				return nil, err
 			}
-			project.ComponentInfo[component.Name()] = projectComponent
 		}
 	}
-	err := validateProject(project)
+	err := validateProject(&project)
 	if err != nil {
 		return nil, err
 	}
 
-	return project, nil
+	return &project, nil
 }
 
-func LoadRawConfig(data []byte) (*dpl.Project, error) {
+func LoadRawConfig(data []byte) (dpl.Project, error) {
 	config, err := ini.Load(data)
 	if err != nil {
 		return nil, err
@@ -92,7 +128,7 @@ func LoadRawConfig(data []byte) (*dpl.Project, error) {
 	return applyConfig(config)
 }
 
-func LoadProjectConfig(path string) (*dpl.Project, error) {
+func LoadProjectConfig(path string) (dpl.Project, error) {
 	config, err := ini.Load(path)
 
 	if err != nil {
