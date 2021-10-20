@@ -8,37 +8,57 @@ import (
 type depSet map[string]struct{}
 type reverseDependencies map[string]depSet
 
+type ComponentNotFoundError struct {
+	Name string
+}
+
+func (cnfe *ComponentNotFoundError) Error() string {
+	return fmt.Sprintf("Couldn't find component: %v", cnfe.Name)
+}
+
 func makeComponentTask(component string, task string) string {
 	return fmt.Sprintf("%v.%v", component, task)
 }
 
-func insertKey(componentTask string, reverseDeps reverseDependencies) {
+func insertKey(componentTask string, reverseDeps reverseDependencies) bool {
 	_, found := reverseDeps[componentTask]
 	if !found {
 		reverseDeps[componentTask] = make(depSet)
+		return true
 	}
+	return false
 }
 
 func addDeps(project Project, target string, tasks []string, reverseDeps reverseDependencies) error {
-	component, _ := project.GetComponent(target)
 	for index, task := range tasks {
-		depKey := fmt.Sprintf("depends.%v", task)
 		componentTask := makeComponentTask(target, task)
-		insertKey(componentTask, reverseDeps)
+		firstTime := insertKey(componentTask, reverseDeps)
 
-		rawDepends, found := component.GetValue(depKey)
-		if found {
-			// we have dependencies
-			splitDepends := strings.Split(rawDepends, ",")
-			for _, depend := range splitDepends {
-				addDeps(project, depend, tasks[:index+1], reverseDeps)
-				dependsTask := makeComponentTask(depend, task)
-				insertKey(dependsTask, reverseDeps)
-				reverseDeps[dependsTask][componentTask] = struct{}{}
+		if firstTime {
+			component, found := project.GetComponent(target)
+			if !found {
+				return &ComponentNotFoundError{
+					Name: target,
+				}
 			}
-		}
-		if index > 0 {
-			reverseDeps[makeComponentTask(target, tasks[index-1])][makeComponentTask(target, tasks[index])] = struct{}{}
+			depKey := fmt.Sprintf("depends.%v", task)
+			rawDepends, found := component.GetValue(depKey)
+			if found {
+				// we have dependencies
+				splitDepends := strings.Split(rawDepends, ",")
+				for _, depend := range splitDepends {
+					err := addDeps(project, depend, tasks[:index+1], reverseDeps)
+					if err != nil {
+						return err
+					}
+					dependsTask := makeComponentTask(depend, task)
+					insertKey(dependsTask, reverseDeps)
+					reverseDeps[dependsTask][componentTask] = struct{}{}
+				}
+			}
+			if index > 0 {
+				reverseDeps[makeComponentTask(target, tasks[index-1])][makeComponentTask(target, tasks[index])] = struct{}{}
+			}
 		}
 	}
 	return nil
@@ -47,7 +67,10 @@ func addDeps(project Project, target string, tasks []string, reverseDeps reverse
 func makeReverseDependencies(project Project, targets []string, tasks []string) (reverseDependencies, error) {
 	reverseDeps := make(reverseDependencies)
 	for _, target := range targets {
-		addDeps(project, target, tasks, reverseDeps)
+		err := addDeps(project, target, tasks, reverseDeps)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return reverseDeps, nil
 }
@@ -79,7 +102,6 @@ func ResolveDeep(project Project, targets []string, tasks []string) (*DeepResolv
 			}
 		}
 	}
-	fmt.Printf("%v", counts)
 
 	ready := []string{}
 	for name, count := range counts {

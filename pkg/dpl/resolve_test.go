@@ -231,3 +231,55 @@ func TestDiamondReverseDeps(t *testing.T) {
 	}
 	compareDeps(t, expectedDeps, revDeps)
 }
+
+func TestCircularReverseDeps(t *testing.T) {
+	targets := []string{"foo"}
+	project := &resolveProject{
+		components: resolveComponents{
+			targets[0]: resolveComponent{
+				data: map[string]string{
+					"depends.build": targets[0],
+				},
+			},
+		},
+	}
+	tasks := []string{"build"}
+
+	revDeps, err := makeReverseDependencies(project, targets, tasks)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	expectedDeps := reverseDependencies{
+		"foo.build": depSet{
+			"foo.build": exists,
+		},
+	}
+	compareDeps(t, expectedDeps, revDeps)
+}
+
+func TestMissingComponentReverseDeps(t *testing.T) {
+	targets := []string{"foo", "missing"}
+	project := &resolveProject{
+		components: resolveComponents{
+			targets[0]: resolveComponent{
+				data: map[string]string{
+					"depends.build": targets[1],
+				},
+			},
+		},
+	}
+	tasks := []string{"build"}
+
+	_, err := makeReverseDependencies(project, targets[:1], tasks)
+	if err == nil {
+		t.Fatalf("Missing expected error")
+	}
+	missingError, success := err.(*ComponentNotFoundError)
+	if !success {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	if missingError.Name != targets[1] {
+		t.Fatalf("Name mismatch (%v vs %v)", missingError.Name, targets[1])
+	}
+}
