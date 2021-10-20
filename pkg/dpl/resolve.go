@@ -51,3 +51,50 @@ func makeReverseDependencies(project Project, targets []string, tasks []string) 
 	}
 	return reverseDeps, nil
 }
+
+type DeepResolver struct {
+	revDeps    reverseDependencies
+	depCounts  map[string]int
+	readyTasks []string
+}
+
+func ResolveDeep(project Project, targets []string, tasks []string) (*DeepResolver, error) {
+	revDeps, err := makeReverseDependencies(project, targets, tasks)
+	if err != nil {
+		return nil, err
+	}
+
+	counts := make(map[string]int)
+	for baseTask, revDep := range revDeps {
+		_, found := counts[baseTask]
+		if !found {
+			counts[baseTask] = 0
+		}
+		for task := range revDep {
+			count, found := counts[task]
+			if found {
+				counts[task] = count + 1
+			} else {
+				counts[task] = 1
+			}
+		}
+	}
+	fmt.Printf("%v", counts)
+
+	ready := []string{}
+	for name, count := range counts {
+		if count == 0 {
+			ready = append(ready, name)
+		}
+	}
+
+	for _, name := range ready {
+		delete(counts, name)
+	}
+
+	return &DeepResolver{
+		revDeps:    revDeps,
+		depCounts:  counts,
+		readyTasks: ready,
+	}, nil
+}
