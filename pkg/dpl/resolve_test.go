@@ -4,6 +4,10 @@ import (
 	"testing"
 )
 
+var (
+	exists struct{}
+)
+
 func compareDeps(t *testing.T, expected reverseDependencies, actual reverseDependencies) {
 	if len(expected) != len(actual) {
 		t.Fatalf("Unexpected size (%v vs %v)", len(expected), len(actual))
@@ -42,6 +46,31 @@ func TestSingleReverseDeps(t *testing.T) {
 	}
 
 	expectedDeps := reverseDependencies{
+		"foo.build": depSet{},
+	}
+	compareDeps(t, expectedDeps, revDeps)
+}
+
+func TestMultipleTasks(t *testing.T) {
+	targets := []string{"foo"}
+	project := &Project{
+		ComponentInfo: Components{
+			targets[0]: &Component{
+				Name: targets[0],
+			},
+		},
+	}
+	tasks := []string{"checkout", "build"}
+
+	revDeps, err := makeReverseDependencies(project, targets, tasks)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	expectedDeps := reverseDependencies{
+		"foo.checkout": depSet{
+			"foo.build": exists,
+		},
 		"foo.build": depSet{},
 	}
 	compareDeps(t, expectedDeps, revDeps)
@@ -97,7 +126,7 @@ func TestLinearReverseDeps(t *testing.T) {
 
 	expectedDeps := reverseDependencies{
 		"foo.build": depSet{
-			"bar.build": true,
+			"bar.build": exists,
 		},
 		"bar.build": depSet{},
 	}
@@ -140,14 +169,14 @@ func TestDiamondReverseDeps(t *testing.T) {
 
 	expectedDeps := reverseDependencies{
 		"foo.build": depSet{
-			"bar.build": true,
-			"baz.build": true,
+			"bar.build": exists,
+			"baz.build": exists,
 		},
 		"bar.build": depSet{
-			"biz.build": true,
+			"biz.build": exists,
 		},
 		"baz.build": depSet{
-			"biz.build": true,
+			"biz.build": exists,
 		},
 		"biz.build": depSet{},
 	}

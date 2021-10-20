@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-type depSet map[string]bool
+type depSet map[string]struct{}
 type reverseDependencies map[string]depSet
 
 func makeComponentTask(component string, task string) string {
@@ -23,7 +23,7 @@ func addDeps(project *Project, target string, task string, reverseDeps reverseDe
 		for _, depend := range splitDepends {
 			addDeps(project, depend, task, reverseDeps)
 			dependsTask := makeComponentTask(depend, task)
-			reverseDeps[dependsTask][componentTask] = true
+			reverseDeps[dependsTask][componentTask] = struct{}{}
 		}
 	}
 	_, found = reverseDeps[componentTask]
@@ -36,8 +36,10 @@ func addDeps(project *Project, target string, task string, reverseDeps reverseDe
 func makeReverseDependencies(project *Project, targets []string, tasks []string) (reverseDependencies, error) {
 	reverseDeps := make(reverseDependencies)
 	for _, target := range targets {
-		for _, task := range tasks {
+		addDeps(project, target, tasks[0], reverseDeps)
+		for index, task := range tasks[1:] {
 			addDeps(project, target, task, reverseDeps)
+			reverseDeps[makeComponentTask(target, tasks[index])][makeComponentTask(target, tasks[index+1])] = struct{}{}
 		}
 	}
 	return reverseDeps, nil
