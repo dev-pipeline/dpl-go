@@ -1,6 +1,7 @@
 package dpl
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -81,6 +82,72 @@ type DeepResolver struct {
 	readyTasks []string
 }
 
+func (dr *DeepResolver) Complete(task string) {
+	rev, found := dr.revDeps[task]
+	if found {
+		for task := range rev {
+			count, found := dr.depCounts[task]
+			if found {
+				if count == 1 {
+					// this was the last blocking dependency
+					dr.readyTasks = append(dr.readyTasks, task)
+					delete(dr.depCounts, task)
+				} else {
+					dr.depCounts[task] = count - 1
+				}
+			}
+		}
+		delete(dr.revDeps, task)
+	}
+}
+
+func deepCopyReverseDeps(revDeps reverseDependencies) reverseDependencies {
+	ret := reverseDependencies{}
+	for rev, deps := range revDeps {
+		ret[rev] = depSet{}
+		for dep := range deps {
+			ret[rev][dep] = struct{}{}
+		}
+	}
+	return ret
+}
+
+func deepCopyDepCounts(depCounts map[string]int) map[string]int {
+	ret := map[string]int{}
+	for task, count := range depCounts {
+		ret[task] = count
+	}
+	return ret
+}
+
+func deepCopyReadyTasks(tasks []string) []string {
+	ret := make([]string, len(tasks))
+	for index, task := range tasks {
+		ret[index] = task
+	}
+	return ret
+}
+
+func validateResolution(resolver *DeepResolver) error {
+	backupRevDeps := deepCopyReverseDeps(resolver.revDeps)
+	backupCounts := deepCopyDepCounts(resolver.depCounts)
+	backupReady := deepCopyReadyTasks(resolver.readyTasks)
+
+	for len(resolver.readyTasks) > 0 {
+		resolver.Complete(resolver.readyTasks[0])
+		resolver.readyTasks = resolver.readyTasks[1:]
+	}
+
+	if len(resolver.revDeps) > 0 || len(resolver.depCounts) > 0 || len(resolver.readyTasks) > 0 {
+		return errors.New("Unable to resolve targets")
+	}
+
+	resolver.revDeps = backupRevDeps
+	resolver.depCounts = backupCounts
+	resolver.readyTasks = backupReady
+	return nil
+}
+
 func ResolveDeep(project Project, targets []string, tasks []string) (*DeepResolver, error) {
 	revDeps, err := makeReverseDependencies(project, targets, tasks)
 	if err != nil {
@@ -114,9 +181,14 @@ func ResolveDeep(project Project, targets []string, tasks []string) (*DeepResolv
 		delete(counts, name)
 	}
 
-	return &DeepResolver{
+	resolver := &DeepResolver{
 		revDeps:    revDeps,
 		depCounts:  counts,
 		readyTasks: ready,
-	}, nil
+	}
+	err = validateResolution(resolver)
+	if err != nil {
+		return nil, err
+	}
+	return resolver, nil
 }
