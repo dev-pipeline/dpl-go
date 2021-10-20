@@ -133,6 +133,43 @@ func TestLinearReverseDeps(t *testing.T) {
 	compareDeps(t, expectedDeps, revDeps)
 }
 
+func TestImplicitComponentTasks(t *testing.T) {
+	targets := []string{"foo", "bar"}
+	project := &Project{
+		ComponentInfo: Components{
+			targets[0]: &Component{
+				Name: targets[0],
+			},
+			targets[1]: &Component{
+				Name: targets[1],
+				Data: map[string]string{
+					"depends.build": "foo",
+				},
+			},
+		},
+	}
+	tasks := []string{"checkout", "build"}
+
+	revDeps, err := makeReverseDependencies(project, targets[1:], tasks)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	expectedDeps := reverseDependencies{
+		"foo.checkout": depSet{
+			"foo.build": exists,
+		},
+		"foo.build": depSet{
+			"bar.build": exists,
+		},
+		"bar.checkout": depSet{
+			"bar.build": exists,
+		},
+		"bar.build": depSet{},
+	}
+	compareDeps(t, expectedDeps, revDeps)
+}
+
 func TestDiamondReverseDeps(t *testing.T) {
 	targets := []string{"foo", "bar", "baz", "biz"}
 	project := &Project{
