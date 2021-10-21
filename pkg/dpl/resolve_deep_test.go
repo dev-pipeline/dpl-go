@@ -61,6 +61,22 @@ func TestSingleComponent(t *testing.T) {
 
 	expectedReady := []string{"foo.build"}
 	compareReady(t, expectedReady, resolver.readyTasks)
+
+	taskChannel := make(chan []string)
+	resolver.Resolve(taskChannel)
+
+	ready := <-taskChannel
+	if len(ready) != 1 {
+		t.Fatalf("Unexpected ready length (expected 1, got %v)", len(ready))
+	}
+	if ready[0] != "foo.build" {
+		t.Fatalf("Unexpected ready target (%v)", ready[0])
+	}
+	resolver.Complete(ready[0])
+	ready = <-taskChannel
+	if len(ready) != 0 {
+		t.Fatalf("Unexpected ready result (%v)", ready)
+	}
 }
 
 func TestSimpleDeps(t *testing.T) {
@@ -89,6 +105,30 @@ func TestSimpleDeps(t *testing.T) {
 
 	expectedReady := []string{"foo.build"}
 	compareReady(t, expectedReady, resolver.readyTasks)
+
+	taskChannel := make(chan []string)
+	resolver.Resolve(taskChannel)
+
+	ready := <-taskChannel
+	if len(ready) != 1 {
+		t.Fatalf("Unexpected ready length (expected 1, got %v)", len(ready))
+	}
+	if ready[0] != "foo.build" {
+		t.Fatalf("Unexpected ready target (%v)", ready[0])
+	}
+	resolver.Complete(ready[0])
+	ready = <-taskChannel
+	if len(ready) != 1 {
+		t.Fatalf("Unexpected ready length (expected 1, got %v)", len(ready))
+	}
+	if ready[0] != "bar.build" {
+		t.Fatalf("Unexpected ready target (%v)", ready[0])
+	}
+	resolver.Complete(ready[0])
+	ready = <-taskChannel
+	if len(ready) != 0 {
+		t.Fatalf("Unexpected ready result (%v)", ready)
+	}
 }
 
 func TestDiamondDeps(t *testing.T) {
@@ -129,4 +169,46 @@ func TestDiamondDeps(t *testing.T) {
 
 	expectedReady := []string{"foo.build"}
 	compareReady(t, expectedReady, resolver.readyTasks)
+
+	taskChannel := make(chan []string)
+	resolver.Resolve(taskChannel)
+
+	ready := <-taskChannel
+	if len(ready) != 1 {
+		t.Fatalf("Unexpected ready length (expected 1, got %v)", len(ready))
+	}
+	if ready[0] != "foo.build" {
+		t.Fatalf("Unexpected ready target (%v)", ready[0])
+	}
+	resolver.Complete(ready[0])
+
+	ready = <-taskChannel
+	if len(ready) != 2 {
+		t.Fatalf("Unexpected ready length (expected 2, got %v)", len(ready))
+	}
+	readyTasks := map[string]struct{}{}
+	for _, task := range ready {
+		readyTasks[task] = struct{}{}
+	}
+	for _, expectedTask := range []string{"bar.build", "baz.build"} {
+		_, found := readyTasks[expectedTask]
+		if !found {
+			t.Fatalf("Missing expected task: %v", expectedTask)
+		}
+		resolver.Complete(expectedTask)
+	}
+
+	ready = <-taskChannel
+	if len(ready) != 1 {
+		t.Fatalf("Unexpected ready length (expected 1, got %v)", len(ready))
+	}
+	if ready[0] != "biz.build" {
+		t.Fatalf("Unexpected ready target (%v)", ready[0])
+	}
+	resolver.Complete(ready[0])
+
+	ready = <-taskChannel
+	if len(ready) != 0 {
+		t.Fatalf("Unexpected ready result (%v)", ready)
+	}
 }

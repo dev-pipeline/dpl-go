@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 )
 
 type depSet map[string]struct{}
@@ -77,12 +78,40 @@ func makeReverseDependencies(project Project, targets []string, tasks []string) 
 }
 
 type DeepResolver struct {
+	cond       *sync.Cond
 	revDeps    reverseDependencies
 	depCounts  map[string]int
 	readyTasks []string
 }
 
+func (dr *DeepResolver) Resolve(taskChannel chan []string) {
+	go func() {
+		stillWork := func() bool {
+			return len(dr.revDeps) > 0 || len(dr.depCounts) > 0 || len(dr.readyTasks) > 0
+		}
+		dr.cond.L.Lock()
+		for stillWork() {
+			for len(dr.readyTasks) > 0 {
+				toSend := dr.readyTasks
+				dr.readyTasks = []string{}
+				dr.cond.L.Unlock()
+				taskChannel <- toSend
+				dr.cond.L.Lock()
+			}
+
+			if stillWork() {
+				dr.cond.Wait()
+			}
+		}
+		dr.cond.L.Unlock()
+		close(taskChannel)
+	}()
+}
+
 func (dr *DeepResolver) Complete(task string) {
+	dr.cond.L.Lock()
+	defer dr.cond.L.Unlock()
+
 	rev, found := dr.revDeps[task]
 	if found {
 		for task := range rev {
@@ -99,6 +128,8 @@ func (dr *DeepResolver) Complete(task string) {
 		}
 		delete(dr.revDeps, task)
 	}
+
+	dr.cond.Signal()
 }
 
 func deepCopyReverseDeps(revDeps reverseDependencies) reverseDependencies {
@@ -181,7 +212,9 @@ func ResolveDeep(project Project, targets []string, tasks []string) (*DeepResolv
 		delete(counts, name)
 	}
 
+	m := sync.Mutex{}
 	resolver := &DeepResolver{
+		cond:       sync.NewCond(&m),
 		revDeps:    revDeps,
 		depCounts:  counts,
 		readyTasks: ready,
