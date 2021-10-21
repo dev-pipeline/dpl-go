@@ -1,10 +1,12 @@
-package dpl
+package resolve
 
 import (
 	"errors"
 	"fmt"
 	"strings"
 	"sync"
+
+	"github.com/dev-pipeline/dpl-go/pkg/dpl"
 )
 
 type depSet map[string]struct{}
@@ -31,7 +33,7 @@ func insertKey(componentTask string, reverseDeps reverseDependencies) bool {
 	return false
 }
 
-func addDeps(project Project, target string, tasks []string, reverseDeps reverseDependencies) error {
+func addDeps(project dpl.Project, target string, tasks []string, reverseDeps reverseDependencies) error {
 	for index, task := range tasks {
 		componentTask := makeComponentTask(target, task)
 		firstTime := insertKey(componentTask, reverseDeps)
@@ -66,7 +68,7 @@ func addDeps(project Project, target string, tasks []string, reverseDeps reverse
 	return nil
 }
 
-func makeReverseDependencies(project Project, targets []string, tasks []string) (reverseDependencies, error) {
+func makeReverseDependencies(project dpl.Project, targets []string, tasks []string) (reverseDependencies, error) {
 	reverseDeps := make(reverseDependencies)
 	for _, target := range targets {
 		err := addDeps(project, target, tasks, reverseDeps)
@@ -132,6 +134,39 @@ func (dr *DeepResolver) Complete(task string) {
 	dr.cond.Signal()
 }
 
+func (dr *DeepResolver) failHelper(task string, failChain map[string]struct{}) {
+	rev, found := dr.revDeps[task]
+	if found {
+		for task := range rev {
+			dr.failHelper(task, failChain)
+		}
+		delete(dr.revDeps, task)
+	}
+	delete(dr.depCounts, task)
+	failChain[task] = struct{}{}
+}
+
+func (dr *DeepResolver) Fail(task string) []string {
+	failChain := func() map[string]struct{} {
+		dr.cond.L.Lock()
+		defer dr.cond.L.Unlock()
+
+		failChain := map[string]struct{}{}
+		dr.failHelper(task, failChain)
+		delete(failChain, task)
+		dr.cond.Signal()
+		return failChain
+	}()
+
+	failures := make([]string, len(failChain))
+	index := 0
+	for failure := range failChain {
+		failures[index] = failure
+		index++
+	}
+	return failures
+}
+
 func deepCopyReverseDeps(revDeps reverseDependencies) reverseDependencies {
 	ret := reverseDependencies{}
 	for rev, deps := range revDeps {
@@ -179,7 +214,7 @@ func validateResolution(resolver *DeepResolver) error {
 	return nil
 }
 
-func ResolveDeep(project Project, targets []string, tasks []string) (*DeepResolver, error) {
+func ResolveDeep(project dpl.Project, targets []string, tasks []string) (*DeepResolver, error) {
 	revDeps, err := makeReverseDependencies(project, targets, tasks)
 	if err != nil {
 		return nil, err

@@ -1,7 +1,9 @@
-package dpl
+package resolve
 
 import (
 	"testing"
+
+	"github.com/dev-pipeline/dpl-go/pkg/dpl"
 )
 
 var (
@@ -27,7 +29,7 @@ type resolveProject struct {
 	components resolveComponents
 }
 
-func (rp *resolveProject) GetComponent(name string) (Component, bool) {
+func (rp *resolveProject) GetComponent(name string) (dpl.Component, bool) {
 	component, found := rp.components[name]
 	if found {
 		return &component, true
