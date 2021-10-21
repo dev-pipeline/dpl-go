@@ -51,7 +51,7 @@ func TestSingleComponent(t *testing.T) {
 	}
 	tasks := []string{"build"}
 
-	resolver, err := ResolveDeep(project, targets, tasks)
+	resolver, err := resolveDeep(project, targets, tasks)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
@@ -93,7 +93,7 @@ func TestSimpleDeps(t *testing.T) {
 	}
 	tasks := []string{"build"}
 
-	resolver, err := ResolveDeep(project, targets, tasks)
+	resolver, err := resolveDeep(project, targets, tasks)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
@@ -155,7 +155,7 @@ func TestDiamondDeps(t *testing.T) {
 	}
 	tasks := []string{"build"}
 
-	resolver, err := ResolveDeep(project, targets, tasks)
+	resolver, err := resolveDeep(project, targets, tasks)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
@@ -237,7 +237,7 @@ func TestFailDiamondDeps(t *testing.T) {
 	}
 	tasks := []string{"build"}
 
-	resolver, err := ResolveDeep(project, targets, tasks)
+	resolver, err := resolveDeep(project, targets, tasks)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}

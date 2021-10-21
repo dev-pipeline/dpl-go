@@ -6,10 +6,6 @@ import (
 	"github.com/dev-pipeline/dpl-go/pkg/dpl"
 )
 
-var (
-	exists struct{}
-)
-
 type resolveComponent struct {
 	data map[string]string
 }
