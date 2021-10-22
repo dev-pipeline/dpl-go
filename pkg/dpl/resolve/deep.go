@@ -189,6 +189,8 @@ func resolveDeep(project dpl.Project, targets []string, tasks []string) (*DeepRe
 	return resolver, nil
 }
 
-func ResolveDeep(project dpl.Project, targets []string, tasks []string) (Resolver, error) {
-	return resolveDeep(project, targets, tasks)
+func init() {
+	RegisterResolver("deep", func(project dpl.Project, targets []string, tasks []string) (Resolver, error) {
+		return resolveDeep(project, targets, tasks)
+	})
 }
