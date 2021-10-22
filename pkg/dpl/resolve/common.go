@@ -3,7 +3,6 @@ package resolve
 import (
 	"errors"
 	"fmt"
-	"strings"
 	"sync"
 
 	"github.com/dev-pipeline/dpl-go/pkg/dpl"
@@ -126,11 +125,10 @@ func addDeps(project dpl.Project, target string, tasks []string, reverseDeps rev
 				}
 			}
 			depKey := fmt.Sprintf("depends.%v", task)
-			rawDepends, found := component.GetValue(depKey)
-			if found {
+			rawDepends := component.GetValue(depKey)
+			if rawDepends != nil {
 				// we have dependencies
-				splitDepends := strings.Split(rawDepends, ",")
-				for _, depend := range splitDepends {
+				for _, depend := range rawDepends {
 					err := addDeps(project, depend, tasks[:index+1], reverseDeps)
 					if err != nil {
 						return err

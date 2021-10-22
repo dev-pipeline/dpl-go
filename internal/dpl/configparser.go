@@ -69,11 +69,11 @@ func (ic *IniComponent) Name() string {
 	return ic.config.Name()
 }
 
-func (ic *IniComponent) GetValue(name string) (string, bool) {
-	if ic.config.HasValue(name) {
-		return ic.config.Key(name).Value(), true
+func (ic *IniComponent) GetValue(name string) []string {
+	if ic.config.HasKey(name) {
+		return ic.config.Key(name).ValueWithShadows()
 	}
-	return "", false
+	return nil
 }
 
 type IniProject struct {
@@ -125,7 +125,7 @@ func applyConfig(config *ini.File) (dpl.Project, error) {
 }
 
 func LoadRawConfig(data []byte) (dpl.Project, error) {
-	config, err := ini.Load(data)
+	config, err := ini.ShadowLoad(data)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +133,7 @@ func LoadRawConfig(data []byte) (dpl.Project, error) {
 }
 
 func LoadProjectConfig(path string) (dpl.Project, error) {
-	config, err := ini.Load(path)
+	config, err := ini.ShadowLoad(path)
 
 	if err != nil {
 		return nil, err

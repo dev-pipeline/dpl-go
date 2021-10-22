@@ -7,16 +7,19 @@ import (
 )
 
 type resolveComponent struct {
-	data map[string]string
+	data map[string][]string
 }
 
 func (rs *resolveComponent) Name() string {
 	return ""
 }
 
-func (rs *resolveComponent) GetValue(key string) (string, bool) {
+func (rs *resolveComponent) GetValue(key string) []string {
 	value, found := rs.data[key]
-	return value, found
+	if found {
+		return value
+	}
+	return nil
 }
 
 type resolveComponents map[string]resolveComponent
@@ -137,8 +140,8 @@ func TestLinearReverseDeps(t *testing.T) {
 		components: resolveComponents{
 			targets[0]: resolveComponent{},
 			targets[1]: resolveComponent{
-				data: map[string]string{
-					"depends.build": "foo",
+				data: map[string][]string{
+					"depends.build": []string{"foo"},
 				},
 			},
 		},
@@ -165,8 +168,8 @@ func TestImplicitComponentTasks(t *testing.T) {
 		components: resolveComponents{
 			targets[0]: resolveComponent{},
 			targets[1]: resolveComponent{
-				data: map[string]string{
-					"depends.build": "foo",
+				data: map[string][]string{
+					"depends.build": []string{"foo"},
 				},
 			},
 		},
@@ -199,18 +202,21 @@ func TestDiamondReverseDeps(t *testing.T) {
 		components: resolveComponents{
 			targets[0]: resolveComponent{},
 			targets[1]: resolveComponent{
-				data: map[string]string{
-					"depends.build": "foo",
+				data: map[string][]string{
+					"depends.build": []string{"foo"},
 				},
 			},
 			targets[2]: resolveComponent{
-				data: map[string]string{
-					"depends.build": "foo",
+				data: map[string][]string{
+					"depends.build": []string{"foo"},
 				},
 			},
 			targets[3]: resolveComponent{
-				data: map[string]string{
-					"depends.build": "bar,baz",
+				data: map[string][]string{
+					"depends.build": []string{
+						"bar",
+						"baz",
+					},
 				},
 			},
 		},
@@ -243,8 +249,8 @@ func TestCircularReverseDeps(t *testing.T) {
 	project := &resolveProject{
 		components: resolveComponents{
 			targets[0]: resolveComponent{
-				data: map[string]string{
-					"depends.build": targets[0],
+				data: map[string][]string{
+					"depends.build": []string{targets[0]},
 				},
 			},
 		},
@@ -269,8 +275,8 @@ func TestMissingComponentReverseDeps(t *testing.T) {
 	project := &resolveProject{
 		components: resolveComponents{
 			targets[0]: resolveComponent{
-				data: map[string]string{
-					"depends.build": targets[1],
+				data: map[string][]string{
+					"depends.build": []string{targets[1]},
 				},
 			},
 		},

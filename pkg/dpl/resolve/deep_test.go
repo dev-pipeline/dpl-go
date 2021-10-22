@@ -85,8 +85,8 @@ func TestSimpleDeps(t *testing.T) {
 		components: resolveComponents{
 			targets[0]: resolveComponent{},
 			targets[1]: resolveComponent{
-				data: map[string]string{
-					"depends.build": "foo",
+				data: map[string][]string{
+					"depends.build": []string{"foo"},
 				},
 			},
 		},
@@ -137,18 +137,21 @@ func TestDiamondDeps(t *testing.T) {
 		components: resolveComponents{
 			targets[0]: resolveComponent{},
 			targets[1]: resolveComponent{
-				data: map[string]string{
-					"depends.build": "foo",
+				data: map[string][]string{
+					"depends.build": []string{"foo"},
 				},
 			},
 			targets[2]: resolveComponent{
-				data: map[string]string{
-					"depends.build": "foo",
+				data: map[string][]string{
+					"depends.build": []string{"foo"},
 				},
 			},
 			targets[3]: resolveComponent{
-				data: map[string]string{
-					"depends.build": "bar,baz",
+				data: map[string][]string{
+					"depends.build": []string{
+						"bar",
+						"baz",
+					},
 				},
 			},
 		},
@@ -219,18 +222,21 @@ func TestFailDiamondDeps(t *testing.T) {
 		components: resolveComponents{
 			targets[0]: resolveComponent{},
 			targets[1]: resolveComponent{
-				data: map[string]string{
-					"depends.build": "foo",
+				data: map[string][]string{
+					"depends.build": []string{"foo"},
 				},
 			},
 			targets[2]: resolveComponent{
-				data: map[string]string{
-					"depends.build": "foo",
+				data: map[string][]string{
+					"depends.build": []string{"foo"},
 				},
 			},
 			targets[3]: resolveComponent{
-				data: map[string]string{
-					"depends.build": "bar,baz",
+				data: map[string][]string{
+					"depends.build": []string{
+						"bar",
+						"baz",
+					},
 				},
 			},
 		},

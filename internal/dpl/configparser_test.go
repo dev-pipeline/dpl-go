@@ -31,3 +31,33 @@ func TestParseSimple(t *testing.T) {
 		}
 	}
 }
+
+func TestParseMultiValue(t *testing.T) {
+	project, err := LoadRawConfig(
+		[]byte(`
+			[foo]
+			build.depends = bar
+			build.depends = baz
+		`),
+	)
+
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+
+	foo, _ := project.GetComponent("foo")
+	expectedDepends := []string{
+		"bar",
+		"baz",
+	}
+	depends := foo.GetValue("build.depends")
+	if len(expectedDepends) != len(depends) {
+		t.Fatalf("Unexpected key counts (%v vs %v)", len(expectedDepends), len(depends))
+	}
+
+	for index := range expectedDepends {
+		if expectedDepends[index] != depends[index] {
+			t.Fatalf("Unexpected value at index %v (%v vs %v)", index, expectedDepends[index], depends[index])
+		}
+	}
+}
