@@ -3,6 +3,7 @@ package configfile
 import (
 	"errors"
 	"fmt"
+	"regexp"
 
 	"gopkg.in/ini.v1"
 
@@ -74,6 +75,62 @@ func (ic *IniComponent) GetValue(name string) []string {
 		return ic.config.Key(name).ValueWithShadows()
 	}
 	return nil
+}
+
+const (
+	expandLimit = 100
+)
+
+func (ic *IniComponent) expandHelper(value string) (string, error) {
+	pattern, err := regexp.Compile(`(^|[^\\])(?:\${(?:([a-z]+)\.)?([a-z]+)})`)
+	if err != nil {
+		return "", err
+	}
+
+	count := 0
+	for count < expandLimit {
+		groups := pattern.FindStringSubmatch(value)
+
+		if groups == nil {
+			// done expanding
+			return value, nil
+		}
+		prefix := groups[1]
+		component := groups[2]
+		key := groups[3]
+
+		applyValue := func(newValue string) {
+			loc := pattern.FindStringIndex(value)
+			value = fmt.Sprintf("%v%v%v%v", value[:loc[0]], prefix, newValue, value[loc[1]:])
+		}
+
+		if len(component) != 0 {
+			// TODO: get component
+		} else {
+			rawKey := ic.config.Key(key)
+			if rawKey != nil {
+				applyValue(rawKey.Value())
+			}
+		}
+		count++
+	}
+	return "", errors.New("Too many expansions")
+}
+
+func (ic *IniComponent) ExpandValue(name string) ([]string, error) {
+	rawValues := ic.GetValue(name)
+	if rawValues == nil {
+		return nil, nil
+	}
+	expandedValues := make([]string, len(rawValues))
+	for index, value := range rawValues {
+		expandedValue, err := ic.expandHelper(value)
+		if err != nil {
+			return nil, err
+		}
+		expandedValues[index] = expandedValue
+	}
+	return expandedValues, nil
 }
 
 type IniProject struct {
