@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/dev-pipeline/dpl-go/internal/dpl"
+	"github.com/dev-pipeline/dpl-go/pkg/dpl/configfile"
 )
 
 func TestClean(t *testing.T) {
 	badName := "hello"
-	_, err := dplint.LoadRawConfig([]byte(fmt.Sprintf("[%v]", badName)))
+	_, err := configfile.LoadRawConfig([]byte(fmt.Sprintf("[%v]", badName)))
 
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
@@ -18,13 +18,13 @@ func TestClean(t *testing.T) {
 
 func TestRestrictedName(t *testing.T) {
 	badName := "/hello"
-	_, err := dplint.LoadRawConfig([]byte(fmt.Sprintf("[%v]", badName)))
+	_, err := configfile.LoadRawConfig([]byte(fmt.Sprintf("[%v]", badName)))
 
 	if err == nil {
 		t.Fatalf("Expected error")
 	}
 
-	realErr, ok := err.(*dplint.ComponentValidationError)
+	realErr, ok := err.(*configfile.ComponentValidationError)
 	if ok {
 		origErr, ok := realErr.OriginalError.(*InvalidComponentNameError)
 		if !ok {

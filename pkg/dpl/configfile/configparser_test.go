@@ -1,4 +1,4 @@
-package dplint
+package configfile
 
 import (
 	"fmt"
