@@ -26,6 +26,12 @@ func (rs *resolveComponent) ExpandValue(key string) ([]string, error) {
 	return rs.GetValue(key), nil
 }
 
+func (rs *resolveComponent) SetValue(string, []string) {
+}
+
+func (rs *resolveComponent) EraseValue(string) {
+}
+
 type resolveComponents map[string]resolveComponent
 
 type resolveProject struct {

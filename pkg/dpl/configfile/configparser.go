@@ -138,6 +138,20 @@ func (ic *IniComponent) ExpandValue(name string) ([]string, error) {
 	return expandedValues, nil
 }
 
+func (ic *IniComponent) SetValue(name string, values []string) {
+	ic.EraseValue(name)
+	if len(values) > 0 {
+		key, _ := ic.config.NewKey(name, values[0])
+		for _, value := range values[1:] {
+			key.AddShadow(value)
+		}
+	}
+}
+
+func (ic *IniComponent) EraseValue(name string) {
+	ic.config.DeleteKey(name)
+}
+
 type IniProject struct {
 	config *ini.File
 }
