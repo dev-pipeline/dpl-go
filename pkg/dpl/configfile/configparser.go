@@ -63,7 +63,8 @@ func validateProject(project dpl.Project) error {
 }
 
 type IniComponent struct {
-	config *ini.Section
+	config  *ini.Section
+	project *IniProject
 }
 
 func (ic *IniComponent) Name() string {
@@ -99,18 +100,22 @@ func (ic *IniComponent) expandHelper(value string) (string, error) {
 		component := groups[2]
 		key := groups[3]
 
-		applyValue := func(newValue string) {
-			loc := pattern.FindStringIndex(value)
-			value = fmt.Sprintf("%v%v%v%v", value[:loc[0]], prefix, newValue, value[loc[1]:])
-		}
-
+		iniComponent := ic.config
 		if len(component) != 0 {
-			// TODO: get component
-		} else {
-			rawKey := ic.config.Key(key)
-			if rawKey != nil {
-				applyValue(rawKey.Value())
+			var found bool
+			iniComponent, found = ic.project.getConfigComponent(component)
+			if !found {
+				return "", errors.New("Couldn't find component")
 			}
+		}
+		if iniComponent.HasKey(key) {
+			rawKey := iniComponent.Key(key)
+			if rawKey != nil {
+				loc := pattern.FindStringIndex(value)
+				value = fmt.Sprintf("%v%v%v%v", value[:loc[0]], prefix, rawKey.Value(), value[loc[1]:])
+			}
+		} else {
+			return "", errors.New("Missing key")
 		}
 		count++
 	}
@@ -137,7 +142,7 @@ type IniProject struct {
 	config *ini.File
 }
 
-func (ip *IniProject) GetComponent(name string) (dpl.Component, bool) {
+func (ip *IniProject) getConfigComponent(name string) (*ini.Section, bool) {
 	if name == ini.DEFAULT_SECTION {
 		return nil, false
 	}
@@ -145,8 +150,17 @@ func (ip *IniProject) GetComponent(name string) (dpl.Component, bool) {
 	if err != nil {
 		return nil, false
 	}
+	return component, true
+}
+
+func (ip *IniProject) GetComponent(name string) (dpl.Component, bool) {
+	component, found := ip.getConfigComponent(name)
+	if !found {
+		return nil, false
+	}
 	return &IniComponent{
-		config: component,
+		config:  component,
+		project: ip,
 	}, true
 }
 
