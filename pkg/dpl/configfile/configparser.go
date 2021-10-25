@@ -178,10 +178,6 @@ func (ip *IniProject) GetComponent(name string) (dpl.Component, bool) {
 	}, true
 }
 
-func (ip *IniProject) ComponentNames() []string {
-	return ip.config.SectionStrings()
-}
-
 func (ip *IniProject) Components() []string {
 	return ip.config.SectionStrings()[1:]
 }

@@ -10,6 +10,5 @@ type Component interface {
 
 type Project interface {
 	GetComponent(string) (Component, bool)
-	ComponentNames() []string
 	Components() []string
 }

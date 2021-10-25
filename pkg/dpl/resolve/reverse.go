@@ -33,7 +33,7 @@ func trimReverseDependencies(fullDeps reverseDependencies, targets []string, tas
 }
 
 func resolveReverse(project dpl.Project, targets []string, tasks []string) (*reverseResolver, error) {
-	revDeps, err := makeReverseDependencies(project, project.ComponentNames(), tasks)
+	revDeps, err := makeReverseDependencies(project, project.Components(), tasks)
 	if err != nil {
 		return nil, err
 	}

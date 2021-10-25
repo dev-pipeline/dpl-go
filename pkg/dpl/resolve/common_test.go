@@ -46,16 +46,12 @@ func (rp *resolveProject) GetComponent(name string) (dpl.Component, bool) {
 	return nil, false
 }
 
-func (rp *resolveProject) ComponentNames() []string {
+func (rp *resolveProject) Components() []string {
 	names := []string{}
 	for name := range rp.components {
 		names = append(names, name)
 	}
 	return names
-}
-
-func (rp *resolveProject) Components() []string {
-	return nil
 }
 
 func compareDeps(t *testing.T, expected reverseDependencies, actual reverseDependencies) {

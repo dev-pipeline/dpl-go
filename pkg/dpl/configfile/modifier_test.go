@@ -27,7 +27,7 @@ func TestApplyPrepend(t *testing.T) {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 	modifierSet := NewModifierSet()
-	modifierSet.prependValues["a"] = []string{"hello"}
+	modifierSet.PrependValues["a"] = []string{"hello"}
 
 	foo, found := project.GetComponent("foo")
 	if !found {
@@ -54,7 +54,7 @@ func TestApplyPrependEmpty(t *testing.T) {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 	modifierSet := NewModifierSet()
-	modifierSet.prependValues["a"] = []string{"hello"}
+	modifierSet.PrependValues["a"] = []string{"hello"}
 
 	foo, found := project.GetComponent("foo")
 	if !found {
@@ -80,7 +80,7 @@ func TestApplyAppendEmpty(t *testing.T) {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 	modifierSet := NewModifierSet()
-	modifierSet.appendValues["a"] = []string{"hello"}
+	modifierSet.AppendValues["a"] = []string{"hello"}
 
 	foo, found := project.GetComponent("foo")
 	if !found {
@@ -107,7 +107,7 @@ func TestApplyAppend(t *testing.T) {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 	modifierSet := NewModifierSet()
-	modifierSet.appendValues["a"] = []string{"world"}
+	modifierSet.AppendValues["a"] = []string{"world"}
 
 	foo, found := project.GetComponent("foo")
 	if !found {
@@ -135,7 +135,7 @@ func TestApplyOverride(t *testing.T) {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 	modifierSet := NewModifierSet()
-	modifierSet.overrideValues["a"] = []string{"goodbye"}
+	modifierSet.OverrideValues["a"] = []string{"goodbye"}
 
 	foo, found := project.GetComponent("foo")
 	if !found {
@@ -160,7 +160,7 @@ func TestApplyErase(t *testing.T) {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 	modifierSet := NewModifierSet()
-	modifierSet.eraseValues["a"] = struct{}{}
+	modifierSet.EraseValues["a"] = struct{}{}
 
 	foo, found := project.GetComponent("foo")
 	if !found {
@@ -185,9 +185,9 @@ func TestApplyOverrideAfter(t *testing.T) {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 	modifierSet := NewModifierSet()
-	modifierSet.prependValues["a"] = []string{"say"}
-	modifierSet.appendValues["a"] = []string{"world"}
-	modifierSet.overrideValues["a"] = []string{"goodbye"}
+	modifierSet.PrependValues["a"] = []string{"say"}
+	modifierSet.AppendValues["a"] = []string{"world"}
+	modifierSet.OverrideValues["a"] = []string{"goodbye"}
 
 	foo, found := project.GetComponent("foo")
 	if !found {
@@ -212,10 +212,10 @@ func TestApplyEraseLast(t *testing.T) {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 	modifierSet := NewModifierSet()
-	modifierSet.prependValues["a"] = []string{"say"}
-	modifierSet.appendValues["a"] = []string{"world"}
-	modifierSet.overrideValues["a"] = []string{"goodbye"}
-	modifierSet.eraseValues["a"] = struct{}{}
+	modifierSet.PrependValues["a"] = []string{"say"}
+	modifierSet.AppendValues["a"] = []string{"world"}
+	modifierSet.OverrideValues["a"] = []string{"goodbye"}
+	modifierSet.EraseValues["a"] = struct{}{}
 
 	foo, found := project.GetComponent("foo")
 	if !found {
