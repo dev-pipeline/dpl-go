@@ -29,6 +29,14 @@ func LoadModifierConfig(filename string, modSet configfile.ModifierSet) error {
 			name: "prepend",
 			data: modSet.PrependValues,
 		},
+		shadowSection{
+			name: "append",
+			data: modSet.AppendValues,
+		},
+		shadowSection{
+			name: "override",
+			data: modSet.OverrideValues,
+		},
 	}
 
 	for _, ss := range sections {
@@ -38,6 +46,13 @@ func LoadModifierConfig(filename string, modSet configfile.ModifierSet) error {
 			if err != nil {
 				return err
 			}
+		}
+	}
+
+	section := config.Section("erase")
+	if section != nil {
+		for _, key := range section.Keys() {
+			modSet.EraseValues[key.Name()] = struct{}{}
 		}
 	}
 

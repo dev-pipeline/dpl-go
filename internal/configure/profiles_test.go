@@ -38,21 +38,43 @@ func compareModSets(t *testing.T, expectedModSet configfile.ModifierSet, actualM
 	compareEmptyMaps(t, expectedModSet.EraseValues, actualModSet.EraseValues)
 }
 
-func TestLoadSingleProfile(t *testing.T) {
+func buildConfigPath(testFunc func(string), chunks ...string) {
 	_, currentFilename, _, _ := runtime.Caller(0)
-	configDir := path.Join(currentFilename, "..", "..", "..", "test_files", "configure")
-	modSet, err := loadProfiles(configDir, []string{"foo"})
-	if err != nil {
-		t.Fatalf("Unexpected error: %v", err)
-	}
+	fullArgs := append([]string{
+		currentFilename,
+		"..",
+		"..",
+		"..",
+		"test_files",
+	}, chunks...)
+	dataDir := path.Join(fullArgs...)
+	testFunc(dataDir)
+}
 
-	expectedModSet := configfile.ModifierSet{
-		PrependValues: map[string][]string{
-			"x": []string{
-				"a",
-				"b",
+func TestLoadMultipleProfiles(t *testing.T) {
+	buildConfigPath(func(dataDir string) {
+		modSet, err := loadProfiles(dataDir, []string{
+			"prepend-xab",
+			"append-xyz",
+		})
+		if err != nil {
+			t.Fatalf("Unexpected error: %v", err)
+		}
+
+		expectedModSet := configfile.ModifierSet{
+			PrependValues: map[string][]string{
+				"x": []string{
+					"a",
+					"b",
+				},
 			},
-		},
-	}
-	compareModSets(t, expectedModSet, modSet)
+			AppendValues: map[string][]string{
+				"x": []string{
+					"y",
+					"z",
+				},
+			},
+		}
+		compareModSets(t, expectedModSet, modSet)
+	}, "configure")
 }
