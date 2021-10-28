@@ -19,7 +19,7 @@ type ComponentValidationError struct {
 	OriginalError error
 }
 
-func (cve *ComponentValidationError) Error() string {
+func (cve ComponentValidationError) Error() string {
 	return fmt.Sprintf("%v [%v]", cve.OriginalError, cve.ValidatorName)
 }
 

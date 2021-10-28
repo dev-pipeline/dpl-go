@@ -1,13 +1,10 @@
 package configure
 
 import (
-	"errors"
-	"fmt"
 	"log"
 	"os"
 	"path"
 
-	"github.com/dev-pipeline/dpl-go/pkg/dpl"
 	"github.com/dev-pipeline/dpl-go/pkg/dpl/configfile"
 )
 
@@ -18,31 +15,6 @@ type Flags struct {
 	Overrides        []string
 	Profiles         []string
 	RootDir          string
-}
-
-func loadOverride(componentName string, override string, modSet configfile.ModifierSet) error {
-	return nil
-}
-
-func applyOverrides(overrides []string, project dpl.Project) error {
-	for _, componentName := range project.Components() {
-		modSet := configfile.NewModifierSet()
-		for _, override := range overrides {
-			err := loadOverride(componentName, override, modSet)
-			if err != nil {
-				return err
-			}
-		}
-		component, found := project.GetComponent(componentName)
-		if !found {
-			return errors.New(fmt.Sprintf("Internal error; component %v not found", componentName))
-		}
-		err := configfile.ApplyComponentModifiers(component, modSet)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 func DoConfigure(flags Flags, args []string) {
@@ -62,7 +34,7 @@ func DoConfigure(flags Flags, args []string) {
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
-	err = applyOverrides(flags.Profiles, project)
+	err = applyOverrides(dplConfigDir, flags.Profiles, project)
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
