@@ -2,13 +2,15 @@ package resolve
 
 import (
 	"testing"
+
+	"github.com/dev-pipeline/dpl-go/test/common"
 )
 
 func TestSingleComponentReverse(t *testing.T) {
 	targets := []string{"foo"}
-	project := &resolveProject{
-		components: resolveComponents{
-			targets[0]: resolveComponent{},
+	project := &testcommon.ResolveProject{
+		Comps: testcommon.ResolveComponents{
+			targets[0]: testcommon.ResolveComponent{},
 		},
 	}
 	tasks := []string{"build"}
@@ -37,11 +39,11 @@ func TestSingleComponentReverse(t *testing.T) {
 
 func TestSimpleDepsReverse(t *testing.T) {
 	targets := []string{"foo", "bar"}
-	project := &resolveProject{
-		components: resolveComponents{
-			targets[0]: resolveComponent{},
-			targets[1]: resolveComponent{
-				data: map[string][]string{
+	project := &testcommon.ResolveProject{
+		Comps: testcommon.ResolveComponents{
+			targets[0]: testcommon.ResolveComponent{},
+			targets[1]: testcommon.ResolveComponent{
+				Data: map[string][]string{
 					"depends.build": []string{"foo"},
 				},
 			},
@@ -81,21 +83,21 @@ func TestSimpleDepsReverse(t *testing.T) {
 
 func TestDiamondDepsReverse(t *testing.T) {
 	targets := []string{"foo", "bar", "baz", "biz"}
-	project := &resolveProject{
-		components: resolveComponents{
-			targets[0]: resolveComponent{},
-			targets[1]: resolveComponent{
-				data: map[string][]string{
+	project := &testcommon.ResolveProject{
+		Comps: testcommon.ResolveComponents{
+			targets[0]: testcommon.ResolveComponent{},
+			targets[1]: testcommon.ResolveComponent{
+				Data: map[string][]string{
 					"depends.build": []string{"foo"},
 				},
 			},
-			targets[2]: resolveComponent{
-				data: map[string][]string{
+			targets[2]: testcommon.ResolveComponent{
+				Data: map[string][]string{
 					"depends.build": []string{"foo"},
 				},
 			},
-			targets[3]: resolveComponent{
-				data: map[string][]string{
+			targets[3]: testcommon.ResolveComponent{
+				Data: map[string][]string{
 					"depends.build": []string{
 						"bar",
 						"baz",
@@ -140,21 +142,21 @@ func TestDiamondDepsReverse(t *testing.T) {
 
 func TestFailDiamondDepsReverse(t *testing.T) {
 	targets := []string{"foo", "bar", "baz", "biz"}
-	project := &resolveProject{
-		components: resolveComponents{
-			targets[0]: resolveComponent{},
-			targets[1]: resolveComponent{
-				data: map[string][]string{
+	project := &testcommon.ResolveProject{
+		Comps: testcommon.ResolveComponents{
+			targets[0]: testcommon.ResolveComponent{},
+			targets[1]: testcommon.ResolveComponent{
+				Data: map[string][]string{
 					"depends.build": []string{"foo"},
 				},
 			},
-			targets[2]: resolveComponent{
-				data: map[string][]string{
+			targets[2]: testcommon.ResolveComponent{
+				Data: map[string][]string{
 					"depends.build": []string{"foo"},
 				},
 			},
-			targets[3]: resolveComponent{
-				data: map[string][]string{
+			targets[3]: testcommon.ResolveComponent{
+				Data: map[string][]string{
 					"depends.build": []string{
 						"bar",
 						"baz",

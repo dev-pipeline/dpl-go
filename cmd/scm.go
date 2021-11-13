@@ -3,11 +3,12 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 
-	_ "github.com/dev-pipeline/dpl-go/internal/checkout"
+	"github.com/dev-pipeline/dpl-go/internal/checkout"
+	"github.com/dev-pipeline/dpl-go/internal/common"
 )
 
 var (
-	checkoutCommon commonArgs
+	args common.Args
 
 	checkoutCmd = &cobra.Command{
 		Use:   "checkout",
@@ -16,10 +17,13 @@ var (
 	}
 )
 
-func doCheckout(cmd *cobra.Command, args []string) {
+func doCheckout(cmd *cobra.Command, components []string) {
+	common.DoCommand(components, args, []common.Task{
+		checkout.Task,
+	})
 }
 
 func init() {
-	addCommonArgs(checkoutCmd, &checkoutCommon)
+	addCommonArgs(checkoutCmd, &args)
 	rootCmd.AddCommand(checkoutCmd)
 }

@@ -3,56 +3,8 @@ package resolve
 import (
 	"testing"
 
-	"github.com/dev-pipeline/dpl-go/pkg/dpl"
+	"github.com/dev-pipeline/dpl-go/test/common"
 )
-
-type resolveComponent struct {
-	data map[string][]string
-}
-
-func (rs *resolveComponent) Name() string {
-	return ""
-}
-
-func (rs *resolveComponent) GetValue(key string) []string {
-	value, found := rs.data[key]
-	if found {
-		return value
-	}
-	return nil
-}
-
-func (rs *resolveComponent) ExpandValue(key string) ([]string, error) {
-	return rs.GetValue(key), nil
-}
-
-func (rs *resolveComponent) SetValue(string, []string) {
-}
-
-func (rs *resolveComponent) EraseValue(string) {
-}
-
-type resolveComponents map[string]resolveComponent
-
-type resolveProject struct {
-	components resolveComponents
-}
-
-func (rp *resolveProject) GetComponent(name string) (dpl.Component, bool) {
-	component, found := rp.components[name]
-	if found {
-		return &component, true
-	}
-	return nil, false
-}
-
-func (rp *resolveProject) Components() []string {
-	names := []string{}
-	for name := range rp.components {
-		names = append(names, name)
-	}
-	return names
-}
 
 func compareDeps(t *testing.T, expected reverseDependencies, actual reverseDependencies) {
 	if len(expected) != len(actual) {
@@ -77,9 +29,9 @@ func compareDeps(t *testing.T, expected reverseDependencies, actual reverseDepen
 
 func TestSingleReverseDeps(t *testing.T) {
 	targets := []string{"foo"}
-	project := &resolveProject{
-		components: resolveComponents{
-			targets[0]: resolveComponent{},
+	project := &testcommon.ResolveProject{
+		Comps: testcommon.ResolveComponents{
+			targets[0]: testcommon.ResolveComponent{},
 		},
 	}
 	tasks := []string{"build"}
@@ -97,9 +49,9 @@ func TestSingleReverseDeps(t *testing.T) {
 
 func TestMultipleTasks(t *testing.T) {
 	targets := []string{"foo"}
-	project := &resolveProject{
-		components: resolveComponents{
-			targets[0]: resolveComponent{},
+	project := &testcommon.ResolveProject{
+		Comps: testcommon.ResolveComponents{
+			targets[0]: testcommon.ResolveComponent{},
 		},
 	}
 	tasks := []string{"checkout", "build"}
@@ -120,10 +72,10 @@ func TestMultipleTasks(t *testing.T) {
 
 func TestIndependentReverseDeps(t *testing.T) {
 	targets := []string{"foo", "bar"}
-	project := &resolveProject{
-		components: resolveComponents{
-			targets[0]: resolveComponent{},
-			targets[1]: resolveComponent{},
+	project := &testcommon.ResolveProject{
+		Comps: testcommon.ResolveComponents{
+			targets[0]: testcommon.ResolveComponent{},
+			targets[1]: testcommon.ResolveComponent{},
 		},
 	}
 	tasks := []string{"build"}
@@ -142,11 +94,11 @@ func TestIndependentReverseDeps(t *testing.T) {
 
 func TestLinearReverseDeps(t *testing.T) {
 	targets := []string{"foo", "bar"}
-	project := &resolveProject{
-		components: resolveComponents{
-			targets[0]: resolveComponent{},
-			targets[1]: resolveComponent{
-				data: map[string][]string{
+	project := &testcommon.ResolveProject{
+		Comps: testcommon.ResolveComponents{
+			targets[0]: testcommon.ResolveComponent{},
+			targets[1]: testcommon.ResolveComponent{
+				Data: map[string][]string{
 					"depends.build": []string{"foo"},
 				},
 			},
@@ -170,11 +122,11 @@ func TestLinearReverseDeps(t *testing.T) {
 
 func TestImplicitComponentTasks(t *testing.T) {
 	targets := []string{"foo", "bar"}
-	project := &resolveProject{
-		components: resolveComponents{
-			targets[0]: resolveComponent{},
-			targets[1]: resolveComponent{
-				data: map[string][]string{
+	project := &testcommon.ResolveProject{
+		Comps: testcommon.ResolveComponents{
+			targets[0]: testcommon.ResolveComponent{},
+			targets[1]: testcommon.ResolveComponent{
+				Data: map[string][]string{
 					"depends.build": []string{"foo"},
 				},
 			},
@@ -204,21 +156,21 @@ func TestImplicitComponentTasks(t *testing.T) {
 
 func TestDiamondReverseDeps(t *testing.T) {
 	targets := []string{"foo", "bar", "baz", "biz"}
-	project := &resolveProject{
-		components: resolveComponents{
-			targets[0]: resolveComponent{},
-			targets[1]: resolveComponent{
-				data: map[string][]string{
+	project := &testcommon.ResolveProject{
+		Comps: testcommon.ResolveComponents{
+			targets[0]: testcommon.ResolveComponent{},
+			targets[1]: testcommon.ResolveComponent{
+				Data: map[string][]string{
 					"depends.build": []string{"foo"},
 				},
 			},
-			targets[2]: resolveComponent{
-				data: map[string][]string{
+			targets[2]: testcommon.ResolveComponent{
+				Data: map[string][]string{
 					"depends.build": []string{"foo"},
 				},
 			},
-			targets[3]: resolveComponent{
-				data: map[string][]string{
+			targets[3]: testcommon.ResolveComponent{
+				Data: map[string][]string{
 					"depends.build": []string{
 						"bar",
 						"baz",
@@ -252,10 +204,10 @@ func TestDiamondReverseDeps(t *testing.T) {
 
 func TestCircularReverseDeps(t *testing.T) {
 	targets := []string{"foo"}
-	project := &resolveProject{
-		components: resolveComponents{
-			targets[0]: resolveComponent{
-				data: map[string][]string{
+	project := &testcommon.ResolveProject{
+		Comps: testcommon.ResolveComponents{
+			targets[0]: testcommon.ResolveComponent{
+				Data: map[string][]string{
 					"depends.build": []string{targets[0]},
 				},
 			},
@@ -278,10 +230,10 @@ func TestCircularReverseDeps(t *testing.T) {
 
 func TestMissingComponentReverseDeps(t *testing.T) {
 	targets := []string{"foo", "missing"}
-	project := &resolveProject{
-		components: resolveComponents{
-			targets[0]: resolveComponent{
-				data: map[string][]string{
+	project := &testcommon.ResolveProject{
+		Comps: testcommon.ResolveComponents{
+			targets[0]: testcommon.ResolveComponent{
+				Data: map[string][]string{
 					"depends.build": []string{targets[1]},
 				},
 			},

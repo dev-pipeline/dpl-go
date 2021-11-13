@@ -33,7 +33,7 @@ func init() {
 		"Directory to write build configuration. If specified, build-dir-prefix is ignored.")
 	configureCmd.PersistentFlags().StringVar(&configureFlags.BuildDirBasename, "build-dir-prefix", "build",
 		"Prefix to use for build directories")
-	configureCmd.PersistentFlags().StringVar(&configureFlags.ConfigFile, "config", "build.config",
+	configureCmd.PersistentFlags().StringVar(&configureFlags.ConfigFile, "config-file", "build.config",
 		"Project configuration file")
 	configureCmd.PersistentFlags().StringSliceVar(&configureFlags.Overrides, "override", []string{},
 		"Apply an override set")

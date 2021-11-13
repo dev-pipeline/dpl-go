@@ -28,6 +28,10 @@ func RegisterResolver(name string, resolver ResolveFn) error {
 	return nil
 }
 
+func GetResolver(name string) ResolveFn {
+	return resolvers[name]
+}
+
 type ComponentNotFoundError struct {
 	Name string
 }

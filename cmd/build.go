@@ -2,10 +2,12 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
+
+	"github.com/dev-pipeline/dpl-go/internal/common"
 )
 
 var (
-	buildCommon commonArgs
+	buildCommon common.Args
 
 	buildCmd = &cobra.Command{
 		Use:   "build",

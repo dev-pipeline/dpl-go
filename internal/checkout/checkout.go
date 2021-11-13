@@ -6,9 +6,18 @@ import (
 
 	"github.com/dev-pipeline/dpl-go/pkg/dpl"
 	"github.com/dev-pipeline/dpl-go/pkg/dpl/scm"
+
+	"github.com/dev-pipeline/dpl-go/internal/common"
 )
 
-func DoCheckout(component dpl.Component) error {
+var (
+	Task = common.Task{
+		Name: "scm",
+		Work: checkout,
+	}
+)
+
+func checkout(component dpl.Component) error {
 	scmUris, err := component.ExpandValue("scm.uri")
 	if err != nil {
 		return err

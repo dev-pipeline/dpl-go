@@ -2,10 +2,12 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
+
+	"github.com/dev-pipeline/dpl-go/internal/common"
 )
 
 var (
-	bootstrapCommon commonArgs
+	bootstrapCommon common.Args
 
 	bootstrapCmd = &cobra.Command{
 		Use:   "bootstrap",
