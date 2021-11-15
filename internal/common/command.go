@@ -65,24 +65,19 @@ func makeTaskContainers(tasks []Task) ([]string, map[string]taskFn, error) {
 	return taskList, taskMap, nil
 }
 
-func startDrainComplete(doneChannel chan taskComplete, resolver resolve.Resolver) error {
+type taskCompleteFn func(taskComplete)
+
+func startDrainComplete(doneChannel chan taskComplete, completeFn taskCompleteFn) {
 	go func() {
 		for {
 			completedTask := <-doneChannel
 			if len(completedTask.name) != 0 {
-				if completedTask.err == nil {
-					resolver.Complete(completedTask.name)
-				} else {
-					// TODO: log failures
-					resolver.Fail(completedTask.name)
-				}
+				completeFn(completedTask)
 			} else {
 				return
 			}
 		}
 	}()
-
-	return nil
 }
 
 func startResolve(project dpl.Project, resolver resolve.Resolver, taskMap map[string]taskFn) (chan work, error) {
@@ -120,6 +115,16 @@ func startResolve(project dpl.Project, resolver resolve.Resolver, taskMap map[st
 	return workChannel, nil
 }
 
+type failedTask struct {
+	originalError error
+	name          string
+	dependents    []string
+}
+
+func (self *failedTask) Error() string {
+	return ""
+}
+
 func runTasks(project dpl.Project, components []string, tasks []Task, resolveFn resolve.ResolveFn) error {
 	taskList, taskMap, err := makeTaskContainers(tasks)
 	if err != nil {
@@ -144,13 +149,33 @@ func runTasks(project dpl.Project, components []string, tasks []Task, resolveFn 
 	if err != nil {
 		return err
 	}
-	err = startDrainComplete(doneChannel, resolver)
-	if err != nil {
-		return err
+
+	errors := []error{}
+	m := sync.Mutex{}
+	completeTask := func(completedTask taskComplete) {
+		if completedTask.err == nil {
+			resolver.Complete(completedTask.name)
+		} else {
+			dependents := resolver.Fail(completedTask.name)
+			m.Lock()
+			errors = append(errors, &failedTask{
+				originalError: completedTask.err,
+				name:          completedTask.name,
+				dependents:    dependents,
+			})
+			m.Unlock()
+		}
 	}
+	startDrainComplete(doneChannel, completeTask)
 
 	wg.Wait()
-	return nil
+
+	m.Lock()
+	defer m.Unlock()
+	if len(errors) == 0 {
+		return nil
+	}
+	return errors[0]
 }
 
 func DoCommand(components []string, args Args, tasks []Task) {
