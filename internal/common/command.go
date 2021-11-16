@@ -125,7 +125,7 @@ func (self *failedTask) Error() string {
 	return ""
 }
 
-func runTasks(project dpl.Project, components []string, tasks []Task, resolveFn resolve.ResolveFn) error {
+func runTasks(project dpl.Project, components []string, tasks []Task, resolveFn resolve.ResolveFn, keepGoing bool) error {
 	taskList, taskMap, err := makeTaskContainers(tasks)
 	if err != nil {
 		return err
@@ -156,14 +156,19 @@ func runTasks(project dpl.Project, components []string, tasks []Task, resolveFn 
 		if completedTask.err == nil {
 			resolver.Complete(completedTask.name)
 		} else {
-			dependents := resolver.Fail(completedTask.name)
+			var dependents []string
+			if keepGoing {
+				dependents = resolver.Fail(completedTask.name)
+			} else {
+				dependents, _ = resolver.Abort()
+			}
 			m.Lock()
+			defer m.Unlock()
 			errors = append(errors, &failedTask{
 				originalError: completedTask.err,
 				name:          completedTask.name,
 				dependents:    dependents,
 			})
-			m.Unlock()
 		}
 	}
 	startDrainComplete(doneChannel, completeTask)
@@ -188,6 +193,6 @@ func DoCommand(components []string, args Args, tasks []Task) {
 	if resolveFn == nil {
 		log.Fatalf("No resolver '%v'", args.Dependencies)
 	} else {
-		runTasks(project, components, tasks, resolveFn)
+		runTasks(project, components, tasks, resolveFn, args.KeepGoing)
 	}
 }

@@ -11,6 +11,7 @@ type Resolver interface {
 	Resolve(taskChannel chan []string)
 	Complete(task string)
 	Fail(task string) []string
+	Abort() ([]string, error)
 }
 
 type ResolveFn func(dpl.Project, []string, []string) (Resolver, error)

@@ -16,19 +16,21 @@ var (
 )
 
 type commonResolver struct {
+	forceAbort bool
 	cond       *sync.Cond
 	revDeps    reverseDependencies
 	depCounts  map[string]int
 	readyTasks []string
 }
 
+func (cr *commonResolver) workRemaining() bool {
+	return (len(cr.revDeps) > 0 || len(cr.depCounts) > 0 || len(cr.readyTasks) > 0) && !cr.forceAbort
+}
+
 func (cr *commonResolver) Resolve(taskChannel chan []string) {
 	go func() {
-		stillWork := func() bool {
-			return len(cr.revDeps) > 0 || len(cr.depCounts) > 0 || len(cr.readyTasks) > 0
-		}
 		cr.cond.L.Lock()
-		for stillWork() {
+		for cr.workRemaining() {
 			for len(cr.readyTasks) > 0 {
 				toSend := cr.readyTasks
 				cr.readyTasks = []string{}
@@ -37,7 +39,7 @@ func (cr *commonResolver) Resolve(taskChannel chan []string) {
 				cr.cond.L.Lock()
 			}
 
-			if stillWork() {
+			if cr.workRemaining() {
 				cr.cond.Wait()
 			}
 		}
@@ -101,6 +103,18 @@ func (cr *commonResolver) Fail(task string) []string {
 		index++
 	}
 	return failures
+}
+
+func (cr *commonResolver) Abort() ([]string, error) {
+	cr.cond.L.Lock()
+	defer cr.cond.L.Unlock()
+	cr.forceAbort = true
+	cr.cond.Signal()
+	unresolvedTasks := []string{}
+	for task := range cr.depCounts {
+		unresolvedTasks = append(unresolvedTasks, task)
+	}
+	return unresolvedTasks, nil
 }
 
 func insertKey(componentTask string, reverseDeps reverseDependencies) bool {
@@ -234,6 +248,7 @@ func resolveCommon(revDeps reverseDependencies) (commonResolver, error) {
 
 	m := sync.Mutex{}
 	resolver := commonResolver{
+		forceAbort: false,
 		cond:       sync.NewCond(&m),
 		revDeps:    revDeps,
 		depCounts:  counts,
