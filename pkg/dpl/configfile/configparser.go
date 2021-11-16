@@ -19,6 +19,10 @@ func (ic *IniComponent) Name() string {
 	return ic.config.Name()
 }
 
+func (ic *IniComponent) ValueNames() []string {
+	return ic.config.KeyStrings()
+}
+
 func (ic *IniComponent) GetValue(name string) []string {
 	if ic.config.HasKey(name) {
 		return ic.config.Key(name).ValueWithShadows()

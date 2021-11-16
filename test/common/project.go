@@ -12,6 +12,10 @@ func (rs *ResolveComponent) Name() string {
 	return ""
 }
 
+func (rs *ResolveComponent) ValueNames() []string {
+	return nil
+}
+
 func (rs *ResolveComponent) GetValue(key string) []string {
 	value, found := rs.Data[key]
 	if found {
