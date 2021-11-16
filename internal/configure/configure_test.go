@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/dev-pipeline/dpl-go/pkg/dpl"
 	"github.com/dev-pipeline/dpl-go/pkg/dpl/configfile"
 )
 
@@ -24,9 +25,9 @@ func TestRestrictedName(t *testing.T) {
 		t.Fatalf("Expected error")
 	}
 
-	realErr, ok := err.(*configfile.ComponentValidationError)
+	realErr, ok := err.(*dpl.ComponentValidationError)
 	if ok {
-		origErr, ok := realErr.OriginalError.(*InvalidComponentNameError)
+		origErr, ok := realErr.OriginalError.(*dpl.InvalidComponentNameError)
 		if !ok {
 			t.Fatalf("Unexpected error: %v", realErr.OriginalError)
 		}

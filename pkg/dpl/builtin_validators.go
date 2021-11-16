@@ -1,11 +1,8 @@
-package configure
+package dpl
 
 import (
 	"fmt"
 	"regexp"
-
-	"github.com/dev-pipeline/dpl-go/pkg/dpl"
-	"github.com/dev-pipeline/dpl-go/pkg/dpl/configfile"
 )
 
 type InvalidComponentNameError struct {
@@ -16,7 +13,7 @@ func (icne *InvalidComponentNameError) Error() string {
 	return fmt.Sprintf("Invalid name: %v", icne.Name)
 }
 
-func validateComponentName(component dpl.Component) error {
+func validateComponentName(component Component) error {
 	matched, err := regexp.Match("^([a-zA-Z](?:([-_])?[a-zA-Z0-9])+)+$", []byte(component.Name()))
 
 	if err != nil {
@@ -31,5 +28,5 @@ func validateComponentName(component dpl.Component) error {
 }
 
 func init() {
-	configfile.RegisterComponentValidator("component-name", validateComponentName)
+	RegisterComponentValidator("component-name", validateComponentName)
 }

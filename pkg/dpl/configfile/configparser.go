@@ -10,58 +10,6 @@ import (
 	"github.com/dev-pipeline/dpl-go/pkg/dpl"
 )
 
-type ProjectValidator func(dpl.Project) error
-
-type ComponentValidator func(dpl.Component) error
-
-type ComponentValidationError struct {
-	ValidatorName string
-	OriginalError error
-}
-
-func (cve ComponentValidationError) Error() string {
-	return fmt.Sprintf("%v [%v]", cve.OriginalError, cve.ValidatorName)
-}
-
-var (
-	componentValidators = make(map[string]ComponentValidator)
-	projectValidators   = make(map[string]ProjectValidator)
-)
-
-func RegisterComponentValidator(name string, validator ComponentValidator) error {
-	fmt.Printf("Registering check %v\n", name)
-	componentValidators[name] = validator
-	return nil
-}
-
-func RegisterProjectValidator(name string, validator ProjectValidator) error {
-	projectValidators[name] = validator
-	return nil
-}
-
-func validateComponent(component dpl.Component) error {
-	for name, validator := range componentValidators {
-		err := validator(component)
-		if err != nil {
-			return &ComponentValidationError{
-				ValidatorName: name,
-				OriginalError: err,
-			}
-		}
-	}
-	return nil
-}
-
-func validateProject(project dpl.Project) error {
-	for name, validator := range projectValidators {
-		err := validator(project)
-		if err != nil {
-			return errors.New(fmt.Sprintf("%v [%v]", err, name))
-		}
-	}
-	return nil
-}
-
 type IniComponent struct {
 	config  *ini.Section
 	project *IniProject
@@ -191,13 +139,13 @@ func applyConfig(config *ini.File) (dpl.Project, error) {
 			projectComponent := IniComponent{
 				config: component,
 			}
-			err := validateComponent(&projectComponent)
+			err := dpl.ValidateComponent(&projectComponent)
 			if err != nil {
 				return nil, err
 			}
 		}
 	}
-	err := validateProject(&project)
+	err := dpl.ValidateProject(&project)
 	if err != nil {
 		return nil, err
 	}
