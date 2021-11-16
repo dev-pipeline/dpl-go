@@ -26,20 +26,25 @@ func TestRestrictedComponentName(t *testing.T) {
 
 func testBadFieldHelper(t *testing.T, badKey string) {
 	badField := trivialComponent{
+		ComponentName: "component",
 		Data: map[string][]string{
 			badKey: []string{},
 		},
 	}
 
-	err := validateFieldName(&badField)
+	err := ValidateComponent(&badField)
 	if err == nil {
 		t.Fatalf("Missing expected error")
 	}
 
-	origErr, ok := err.(*InvalidFieldNameError)
+	realErr, ok := err.(*ComponentValidationError)
 	if ok {
+		origErr, ok := realErr.OriginalError.(*InvalidFieldNameError)
+		if !ok {
+			t.Fatalf("Unexpected error: %v", realErr.OriginalError)
+		}
 		if origErr.Name != badKey {
-			t.Fatalf("Invalid component name (got '%v', expected '%v')", origErr.Name, badKey)
+			t.Fatalf("Invalid field name (got '%v', expected '%v')", origErr.Name, badKey)
 		}
 	} else {
 		t.Fatalf("Unexpected error: %v", err)
