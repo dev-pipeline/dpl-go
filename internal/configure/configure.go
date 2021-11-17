@@ -4,8 +4,6 @@ import (
 	"log"
 	"os"
 	"path"
-
-	"github.com/dev-pipeline/dpl-go/pkg/dpl/configfile"
 )
 
 type Flags struct {
@@ -18,7 +16,7 @@ type Flags struct {
 }
 
 func DoConfigure(flags Flags, args []string) {
-	project, err := configfile.LoadProjectConfig(flags.ConfigFile)
+	project, err := loadConfig(flags.ConfigFile)
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}

@@ -3,6 +3,7 @@ package configure
 import (
 	"gopkg.in/ini.v1"
 
+	"github.com/dev-pipeline/dpl-go/pkg/dpl"
 	"github.com/dev-pipeline/dpl-go/pkg/dpl/configfile"
 )
 
@@ -18,8 +19,8 @@ type shadowSection struct {
 	data map[string][]string
 }
 
-func LoadModifierConfig(filename string, modSet configfile.ModifierSet) error {
-	config, err := ini.ShadowLoad(filename)
+func loadModifierConfig(filename string, modSet modifierSet) error {
+	config, err := configfile.LoadProjectConfig(filename)
 	if err != nil {
 		return err
 	}
@@ -27,15 +28,15 @@ func LoadModifierConfig(filename string, modSet configfile.ModifierSet) error {
 	sections := []shadowSection{
 		shadowSection{
 			name: "prepend",
-			data: modSet.PrependValues,
+			data: modSet.prependValues,
 		},
 		shadowSection{
 			name: "append",
-			data: modSet.AppendValues,
+			data: modSet.appendValues,
 		},
 		shadowSection{
 			name: "override",
-			data: modSet.OverrideValues,
+			data: modSet.overrideValues,
 		},
 	}
 
@@ -52,9 +53,50 @@ func LoadModifierConfig(filename string, modSet configfile.ModifierSet) error {
 	section := config.Section("erase")
 	if section != nil {
 		for _, key := range section.Keys() {
-			modSet.EraseValues[key.Name()] = struct{}{}
+			modSet.eraseValues[key.Name()] = struct{}{}
 		}
 	}
 
+	return nil
+}
+
+type modifierSet struct {
+	prependValues  map[string][]string
+	appendValues   map[string][]string
+	overrideValues map[string][]string
+	eraseValues    map[string]struct{}
+}
+
+func newModifierSet() modifierSet {
+	return modifierSet{
+		prependValues:  make(map[string][]string),
+		appendValues:   make(map[string][]string),
+		overrideValues: make(map[string][]string),
+		eraseValues:    make(map[string]struct{}),
+	}
+}
+
+type projectModifiers struct {
+	components map[string]modifierSet
+}
+
+func applyComponentModifiers(component dpl.Component, modifiers modifierSet) error {
+	for key, prepends := range modifiers.prependValues {
+		originalValues := component.GetValue(key)
+		component.SetValue(key, append(prepends, originalValues...))
+	}
+
+	for key, appends := range modifiers.appendValues {
+		originalValues := component.GetValue(key)
+		component.SetValue(key, append(originalValues, appends...))
+	}
+
+	for key, overrides := range modifiers.overrideValues {
+		component.SetValue(key, overrides)
+	}
+
+	for key, _ := range modifiers.eraseValues {
+		component.EraseValue(key)
+	}
 	return nil
 }

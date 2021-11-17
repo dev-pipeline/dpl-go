@@ -1,4 +1,4 @@
-package configfile
+package configure
 
 import (
 	"testing"
@@ -16,7 +16,7 @@ func compareExpected(t *testing.T, expected []string, actual []string) {
 }
 
 func TestApplyPrepend(t *testing.T) {
-	project, err := LoadRawConfig(
+	project, err := loadRawConfig(
 		[]byte(`
 			[foo]
 			a = world
@@ -26,14 +26,14 @@ func TestApplyPrepend(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
-	modifierSet := NewModifierSet()
-	modifierSet.PrependValues["a"] = []string{"hello"}
+	modifierSet := newModifierSet()
+	modifierSet.prependValues["a"] = []string{"hello"}
 
 	foo, found := project.GetComponent("foo")
 	if !found {
 		t.Fatalf("Couldn't find component")
 	}
-	ApplyComponentModifiers(foo, modifierSet)
+	applyComponentModifiers(foo, modifierSet)
 
 	expectedValues := []string{
 		"hello",
@@ -44,7 +44,7 @@ func TestApplyPrepend(t *testing.T) {
 }
 
 func TestApplyPrependEmpty(t *testing.T) {
-	project, err := LoadRawConfig(
+	project, err := loadRawConfig(
 		[]byte(`
 			[foo]
 		`),
@@ -53,14 +53,14 @@ func TestApplyPrependEmpty(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
-	modifierSet := NewModifierSet()
-	modifierSet.PrependValues["a"] = []string{"hello"}
+	modifierSet := newModifierSet()
+	modifierSet.prependValues["a"] = []string{"hello"}
 
 	foo, found := project.GetComponent("foo")
 	if !found {
 		t.Fatalf("Couldn't find component")
 	}
-	ApplyComponentModifiers(foo, modifierSet)
+	applyComponentModifiers(foo, modifierSet)
 
 	expectedValues := []string{
 		"hello",
@@ -70,7 +70,7 @@ func TestApplyPrependEmpty(t *testing.T) {
 }
 
 func TestApplyAppendEmpty(t *testing.T) {
-	project, err := LoadRawConfig(
+	project, err := loadRawConfig(
 		[]byte(`
 			[foo]
 		`),
@@ -79,14 +79,14 @@ func TestApplyAppendEmpty(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
-	modifierSet := NewModifierSet()
-	modifierSet.AppendValues["a"] = []string{"hello"}
+	modifierSet := newModifierSet()
+	modifierSet.appendValues["a"] = []string{"hello"}
 
 	foo, found := project.GetComponent("foo")
 	if !found {
 		t.Fatalf("Couldn't find component")
 	}
-	ApplyComponentModifiers(foo, modifierSet)
+	applyComponentModifiers(foo, modifierSet)
 
 	expectedValues := []string{
 		"hello",
@@ -96,7 +96,7 @@ func TestApplyAppendEmpty(t *testing.T) {
 }
 
 func TestApplyAppend(t *testing.T) {
-	project, err := LoadRawConfig(
+	project, err := loadRawConfig(
 		[]byte(`
 			[foo]
 			a = hello
@@ -106,14 +106,14 @@ func TestApplyAppend(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
-	modifierSet := NewModifierSet()
-	modifierSet.AppendValues["a"] = []string{"world"}
+	modifierSet := newModifierSet()
+	modifierSet.appendValues["a"] = []string{"world"}
 
 	foo, found := project.GetComponent("foo")
 	if !found {
 		t.Fatalf("Couldn't find component")
 	}
-	ApplyComponentModifiers(foo, modifierSet)
+	applyComponentModifiers(foo, modifierSet)
 
 	expectedValues := []string{
 		"hello",
@@ -124,7 +124,7 @@ func TestApplyAppend(t *testing.T) {
 }
 
 func TestApplyOverride(t *testing.T) {
-	project, err := LoadRawConfig(
+	project, err := loadRawConfig(
 		[]byte(`
 			[foo]
 			a = hello
@@ -134,14 +134,14 @@ func TestApplyOverride(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
-	modifierSet := NewModifierSet()
-	modifierSet.OverrideValues["a"] = []string{"goodbye"}
+	modifierSet := newModifierSet()
+	modifierSet.overrideValues["a"] = []string{"goodbye"}
 
 	foo, found := project.GetComponent("foo")
 	if !found {
 		t.Fatalf("Couldn't find component")
 	}
-	ApplyComponentModifiers(foo, modifierSet)
+	applyComponentModifiers(foo, modifierSet)
 
 	expectedValues := []string{"goodbye"}
 	actualValues := foo.GetValue("a")
@@ -149,7 +149,7 @@ func TestApplyOverride(t *testing.T) {
 }
 
 func TestApplyErase(t *testing.T) {
-	project, err := LoadRawConfig(
+	project, err := loadRawConfig(
 		[]byte(`
 			[foo]
 			a = hello
@@ -159,14 +159,14 @@ func TestApplyErase(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
-	modifierSet := NewModifierSet()
-	modifierSet.EraseValues["a"] = struct{}{}
+	modifierSet := newModifierSet()
+	modifierSet.eraseValues["a"] = struct{}{}
 
 	foo, found := project.GetComponent("foo")
 	if !found {
 		t.Fatalf("Couldn't find component")
 	}
-	ApplyComponentModifiers(foo, modifierSet)
+	applyComponentModifiers(foo, modifierSet)
 
 	var expectedValues []string = nil
 	actualValues := foo.GetValue("a")
@@ -174,7 +174,7 @@ func TestApplyErase(t *testing.T) {
 }
 
 func TestApplyOverrideAfter(t *testing.T) {
-	project, err := LoadRawConfig(
+	project, err := loadRawConfig(
 		[]byte(`
 			[foo]
 			a = hello
@@ -184,16 +184,16 @@ func TestApplyOverrideAfter(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
-	modifierSet := NewModifierSet()
-	modifierSet.PrependValues["a"] = []string{"say"}
-	modifierSet.AppendValues["a"] = []string{"world"}
-	modifierSet.OverrideValues["a"] = []string{"goodbye"}
+	modifierSet := newModifierSet()
+	modifierSet.prependValues["a"] = []string{"say"}
+	modifierSet.appendValues["a"] = []string{"world"}
+	modifierSet.overrideValues["a"] = []string{"goodbye"}
 
 	foo, found := project.GetComponent("foo")
 	if !found {
 		t.Fatalf("Couldn't find component")
 	}
-	ApplyComponentModifiers(foo, modifierSet)
+	applyComponentModifiers(foo, modifierSet)
 
 	expectedValues := []string{"goodbye"}
 	actualValues := foo.GetValue("a")
@@ -201,7 +201,7 @@ func TestApplyOverrideAfter(t *testing.T) {
 }
 
 func TestApplyEraseLast(t *testing.T) {
-	project, err := LoadRawConfig(
+	project, err := loadRawConfig(
 		[]byte(`
 			[foo]
 			a = hello
@@ -211,17 +211,17 @@ func TestApplyEraseLast(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
-	modifierSet := NewModifierSet()
-	modifierSet.PrependValues["a"] = []string{"say"}
-	modifierSet.AppendValues["a"] = []string{"world"}
-	modifierSet.OverrideValues["a"] = []string{"goodbye"}
-	modifierSet.EraseValues["a"] = struct{}{}
+	modifierSet := newModifierSet()
+	modifierSet.prependValues["a"] = []string{"say"}
+	modifierSet.appendValues["a"] = []string{"world"}
+	modifierSet.overrideValues["a"] = []string{"goodbye"}
+	modifierSet.eraseValues["a"] = struct{}{}
 
 	foo, found := project.GetComponent("foo")
 	if !found {
 		t.Fatalf("Couldn't find component")
 	}
-	ApplyComponentModifiers(foo, modifierSet)
+	applyComponentModifiers(foo, modifierSet)
 
 	var expectedValues []string = nil
 	actualValues := foo.GetValue("a")

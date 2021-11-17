@@ -6,15 +6,14 @@ import (
 	"path"
 
 	"github.com/dev-pipeline/dpl-go/pkg/dpl"
-	"github.com/dev-pipeline/dpl-go/pkg/dpl/configfile"
 )
 
-func loadProfiles(configRoot string, profiles []string) (configfile.ModifierSet, error) {
+func loadProfiles(configRoot string, profiles []string) (modifierSet, error) {
 	profilesDir := path.Join(configRoot, "profiles.d")
-	modSet := configfile.NewModifierSet()
+	modSet := newModifierSet()
 	for _, profileName := range profiles {
 		profilePath := path.Join(profilesDir, fmt.Sprintf("%v.conf", profileName))
-		err := LoadModifierConfig(profilePath, modSet)
+		err := loadModifierConfig(profilePath, modSet)
 		if err != nil {
 			return modSet, err
 		}
@@ -22,13 +21,13 @@ func loadProfiles(configRoot string, profiles []string) (configfile.ModifierSet,
 	return modSet, nil
 }
 
-func applyProfiles(modSet configfile.ModifierSet, project dpl.Project) error {
+func applyProfiles(modSet modifierSet, project dpl.Project) error {
 	for _, componentName := range project.Components() {
 		component, found := project.GetComponent(componentName)
 		if !found {
 			return errors.New(fmt.Sprintf("Internal error; component %v not found", componentName))
 		}
-		err := configfile.ApplyComponentModifiers(component, modSet)
+		err := applyComponentModifiers(component, modSet)
 		if err != nil {
 			return err
 		}

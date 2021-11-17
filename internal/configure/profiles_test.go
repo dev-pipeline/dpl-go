@@ -4,8 +4,6 @@ import (
 	"path"
 	"runtime"
 	"testing"
-
-	"github.com/dev-pipeline/dpl-go/pkg/dpl/configfile"
 )
 
 func compareStringMaps(t *testing.T, expected map[string][]string, actual map[string][]string) {
@@ -31,11 +29,11 @@ func compareStringMaps(t *testing.T, expected map[string][]string, actual map[st
 func compareEmptyMaps(t *testing.T, expected map[string]struct{}, actual map[string]struct{}) {
 }
 
-func compareModSets(t *testing.T, expectedModSet configfile.ModifierSet, actualModSet configfile.ModifierSet) {
-	compareStringMaps(t, expectedModSet.PrependValues, actualModSet.PrependValues)
-	compareStringMaps(t, expectedModSet.AppendValues, actualModSet.AppendValues)
-	compareStringMaps(t, expectedModSet.OverrideValues, actualModSet.OverrideValues)
-	compareEmptyMaps(t, expectedModSet.EraseValues, actualModSet.EraseValues)
+func compareModSets(t *testing.T, expectedModSet modifierSet, actualModSet modifierSet) {
+	compareStringMaps(t, expectedModSet.prependValues, actualModSet.prependValues)
+	compareStringMaps(t, expectedModSet.appendValues, actualModSet.appendValues)
+	compareStringMaps(t, expectedModSet.overrideValues, actualModSet.overrideValues)
+	compareEmptyMaps(t, expectedModSet.eraseValues, actualModSet.eraseValues)
 }
 
 func buildConfigPath(testFunc func(string), chunks ...string) {
@@ -61,14 +59,14 @@ func TestLoadMultipleProfiles(t *testing.T) {
 			t.Fatalf("Unexpected error: %v", err)
 		}
 
-		expectedModSet := configfile.ModifierSet{
-			PrependValues: map[string][]string{
+		expectedModSet := modifierSet{
+			prependValues: map[string][]string{
 				"x": []string{
 					"a",
 					"b",
 				},
 			},
-			AppendValues: map[string][]string{
+			appendValues: map[string][]string{
 				"x": []string{
 					"y",
 					"z",

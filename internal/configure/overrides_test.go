@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/dev-pipeline/dpl-go/pkg/dpl"
-	"github.com/dev-pipeline/dpl-go/pkg/dpl/configfile"
 )
 
 func compareProject(t *testing.T, project dpl.Project, expected map[string]map[string][]string) {
@@ -37,7 +36,7 @@ func compareProject(t *testing.T, project dpl.Project, expected map[string]map[s
 }
 
 func TestLoadOverride(t *testing.T) {
-	project, err := configfile.LoadRawConfig([]byte(`
+	project, err := loadRawConfig([]byte(`
 		[foo]
 		x = b
 		[bar]

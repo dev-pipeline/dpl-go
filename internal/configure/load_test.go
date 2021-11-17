@@ -1,4 +1,4 @@
-package configfile
+package configure
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ func TestParseSimple(t *testing.T) {
 		"foo",
 		"bar",
 	}
-	project, err := LoadRawConfig(
+	project, err := loadRawConfig(
 		[]byte(fmt.Sprintf(`
 			[%v]
 			[%v]
@@ -33,7 +33,7 @@ func TestParseSimple(t *testing.T) {
 }
 
 func TestParseMultiValue(t *testing.T) {
-	project, err := LoadRawConfig(
+	project, err := loadRawConfig(
 		[]byte(`
 			[foo]
 			build.depends = bar

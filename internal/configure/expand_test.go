@@ -1,11 +1,11 @@
-package configfile
+package configure
 
 import (
 	"testing"
 )
 
 func TestNoExpand(t *testing.T) {
-	project, err := LoadRawConfig(
+	project, err := loadRawConfig(
 		[]byte(`
 			[foo]
 			a = bye
@@ -30,7 +30,7 @@ func TestNoExpand(t *testing.T) {
 }
 
 func TestSingleExpand(t *testing.T) {
-	project, err := LoadRawConfig(
+	project, err := loadRawConfig(
 		[]byte(`
 			[foo]
 			a = ${b}
@@ -55,7 +55,7 @@ func TestSingleExpand(t *testing.T) {
 }
 
 func TestCrossExpand(t *testing.T) {
-	project, err := LoadRawConfig(
+	project, err := loadRawConfig(
 		[]byte(`
 			[foo]
 			a = ${bar.x}
@@ -81,7 +81,7 @@ func TestCrossExpand(t *testing.T) {
 }
 
 func TestCrossKeyFailure(t *testing.T) {
-	project, err := LoadRawConfig(
+	project, err := loadRawConfig(
 		[]byte(`
 			[foo]
 			a = ${bar.x}
@@ -101,7 +101,7 @@ func TestCrossKeyFailure(t *testing.T) {
 }
 
 func TestCrossComponentFailure(t *testing.T) {
-	project, err := LoadRawConfig(
+	project, err := loadRawConfig(
 		[]byte(`
 			[foo]
 			a = ${baz.y}
@@ -121,7 +121,7 @@ func TestCrossComponentFailure(t *testing.T) {
 }
 
 func TestMultiExpand(t *testing.T) {
-	project, err := LoadRawConfig(
+	project, err := loadRawConfig(
 		[]byte(`
 			[foo]
 			a = ${b}${b}
@@ -146,7 +146,7 @@ func TestMultiExpand(t *testing.T) {
 }
 
 func TestRecursiveExpand(t *testing.T) {
-	project, err := LoadRawConfig(
+	project, err := loadRawConfig(
 		[]byte(`
 			[foo]
 			a = ${${b}}
@@ -172,7 +172,7 @@ func TestRecursiveExpand(t *testing.T) {
 }
 
 func TestExpandLimit(t *testing.T) {
-	project, err := LoadRawConfig(
+	project, err := loadRawConfig(
 		[]byte(`
 			[foo]
 			a = ${a}
