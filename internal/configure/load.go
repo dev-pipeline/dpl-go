@@ -7,7 +7,7 @@ import (
 	"github.com/dev-pipeline/dpl-go/pkg/dpl/configfile"
 )
 
-func applyConfig(config *ini.File) (dpl.Project, error) {
+func applyConfig(config *ini.File) (*IniProject, error) {
 	project := IniProject{
 		config: config,
 	}
@@ -30,7 +30,7 @@ func applyConfig(config *ini.File) (dpl.Project, error) {
 	return &project, nil
 }
 
-func loadRawConfig(data []byte) (dpl.Project, error) {
+func loadRawConfig(data []byte) (*IniProject, error) {
 	configFile, err := configfile.LoadRawConfig(data)
 	if err != nil {
 		return nil, err
@@ -42,7 +42,7 @@ func loadRawConfig(data []byte) (dpl.Project, error) {
 	return project, nil
 }
 
-func loadConfig(path string) (dpl.Project, error) {
+func loadConfig(path string) (*IniProject, error) {
 	configFile, err := configfile.LoadProjectConfig(path)
 	if err != nil {
 		return nil, err

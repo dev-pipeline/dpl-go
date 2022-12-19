@@ -3,6 +3,7 @@ package configure
 import (
 	"errors"
 	"fmt"
+	"io"
 	"regexp"
 
 	"gopkg.in/ini.v1"
@@ -108,6 +109,17 @@ type IniProject struct {
 	config *ini.File
 }
 
+func (ip *IniProject) getDefaultComponent() (dpl.Component, error) {
+	section, err := ip.config.GetSection(ini.DEFAULT_SECTION)
+	if err != nil {
+		return nil, err
+	}
+	return &IniComponent{
+		config:  section,
+		project: ip,
+	}, nil
+}
+
 func (ip *IniProject) getConfigComponent(name string) (*ini.Section, bool) {
 	if name == ini.DEFAULT_SECTION {
 		return nil, false
@@ -132,4 +144,9 @@ func (ip *IniProject) GetComponent(name string) (dpl.Component, bool) {
 
 func (ip *IniProject) Components() []string {
 	return ip.config.SectionStrings()[1:]
+}
+
+func (ip *IniProject) Write(writer io.Writer) error {
+	_, err := ip.config.WriteTo(writer)
+	return err
 }
