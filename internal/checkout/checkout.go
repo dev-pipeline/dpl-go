@@ -1,7 +1,6 @@
 package checkout
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/dev-pipeline/dpl-go/pkg/dpl"
@@ -29,7 +28,7 @@ func checkout(component dpl.Component) error {
 		}
 		handler := scm.GetHandler(scmInfo.Scheme)
 		if handler == nil {
-			return errors.New(fmt.Sprintf("No handler for %v", scmInfo.Scheme))
+			return fmt.Errorf("no handler for %v", scmInfo.Scheme)
 		}
 		err = handler.Checkout(scmInfo, component)
 		if err != nil {

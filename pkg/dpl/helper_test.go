@@ -5,28 +5,28 @@ type trivialComponent struct {
 	Data          map[string][]string
 }
 
-func (self *trivialComponent) Name() string {
-	return self.ComponentName
+func (tc *trivialComponent) Name() string {
+	return tc.ComponentName
 }
 
-func (self *trivialComponent) ValueNames() []string {
+func (tc *trivialComponent) ValueNames() []string {
 	ret := []string{}
-	for key := range self.Data {
+	for key := range tc.Data {
 		ret = append(ret, key)
 	}
 	return ret
 }
 
-func (self *trivialComponent) GetValue(key string) []string {
-	return self.Data[key]
+func (tc *trivialComponent) GetValue(key string) []string {
+	return tc.Data[key]
 }
 
-func (self *trivialComponent) ExpandValue(key string) ([]string, error) {
-	return self.GetValue(key), nil
+func (tc *trivialComponent) ExpandValue(key string) ([]string, error) {
+	return tc.GetValue(key), nil
 }
 
-func (self *trivialComponent) SetValue(string, []string) {
+func (tc *trivialComponent) SetValue(string, []string) {
 }
 
-func (self *trivialComponent) EraseValue(string) {
+func (tc *trivialComponent) EraseValue(string) {
 }

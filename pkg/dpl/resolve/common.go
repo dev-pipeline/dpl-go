@@ -13,6 +13,8 @@ type reverseDependencies map[string]depSet
 
 var (
 	exists struct{}
+
+	errCantResolve error = errors.New("unable to resolve targets")
 )
 
 type commonResolver struct {
@@ -140,17 +142,15 @@ func addDeps(project dpl.Project, target string, tasks []string, reverseDeps rev
 			}
 			depKey := fmt.Sprintf("depends.%v", task)
 			rawDepends := component.GetValue(depKey)
-			if rawDepends != nil {
-				// we have dependencies
-				for _, depend := range rawDepends {
-					err := addDeps(project, depend, tasks[:index+1], reverseDeps)
-					if err != nil {
-						return err
-					}
-					dependsTask := makeComponentTask(depend, task)
-					insertKey(dependsTask, reverseDeps)
-					reverseDeps[dependsTask][componentTask] = struct{}{}
+			// we have dependencies
+			for _, depend := range rawDepends {
+				err := addDeps(project, depend, tasks[:index+1], reverseDeps)
+				if err != nil {
+					return err
 				}
+				dependsTask := makeComponentTask(depend, task)
+				insertKey(dependsTask, reverseDeps)
+				reverseDeps[dependsTask][componentTask] = struct{}{}
 			}
 			if index > 0 {
 				reverseDeps[makeComponentTask(target, tasks[index-1])][makeComponentTask(target, tasks[index])] = struct{}{}
@@ -192,9 +192,7 @@ func deepCopyDepCounts(depCounts map[string]int) map[string]int {
 
 func deepCopyReadyTasks(tasks []string) []string {
 	ret := make([]string, len(tasks))
-	for index, task := range tasks {
-		ret[index] = task
-	}
+	copy(ret, tasks)
 	return ret
 }
 
@@ -209,7 +207,7 @@ func validateResolution(resolver *commonResolver) error {
 	}
 
 	if len(resolver.revDeps) > 0 || len(resolver.depCounts) > 0 || len(resolver.readyTasks) > 0 {
-		return errors.New("Unable to resolve targets")
+		return errCantResolve
 	}
 
 	resolver.revDeps = backupRevDeps

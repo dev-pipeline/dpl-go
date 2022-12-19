@@ -6,6 +6,7 @@ TARGETS := dpl
 	coverage \
 	format \
 	install \
+	lint \
 	test \
 	${TARGETS}
 
@@ -22,6 +23,10 @@ dpl:
 
 test:
 	go test -race ./...
+
+lint:
+	go vet ./...
+	staticcheck ./...
 
 coverage:
 	go test -coverprofile=coverage.out ./...

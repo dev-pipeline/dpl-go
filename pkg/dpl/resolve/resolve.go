@@ -1,7 +1,6 @@
 package resolve
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/dev-pipeline/dpl-go/pkg/dpl"
@@ -23,7 +22,7 @@ var (
 func RegisterResolver(name string, resolver ResolveFn) error {
 	_, found := resolvers[name]
 	if found {
-		return errors.New(fmt.Sprintf("Resolver %v already registered", name))
+		return fmt.Errorf("Resolver %v already registered", name)
 	}
 	resolvers[name] = resolver
 	return nil

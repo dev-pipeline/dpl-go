@@ -16,8 +16,8 @@ type InvalidComponentNameError struct {
 	Name string
 }
 
-func (self *InvalidComponentNameError) Error() string {
-	return fmt.Sprintf("Invalid name: %v", self.Name)
+func (icne *InvalidComponentNameError) Error() string {
+	return fmt.Sprintf("invalid name: %v", icne.Name)
 }
 
 func validateComponentName(component Component) error {
@@ -35,8 +35,8 @@ type InvalidFieldNameError struct {
 	Name string
 }
 
-func (self *InvalidFieldNameError) Error() string {
-	return fmt.Sprintf("Invalid key name: %v", self.Name)
+func (ifne *InvalidFieldNameError) Error() string {
+	return fmt.Sprintf("invalid key name: %v", ifne.Name)
 }
 
 func validateFieldName(component Component) error {
@@ -65,12 +65,12 @@ func init() {
 		log.Fatalf("Unexpected error: %v", err)
 	}
 
-	legalFieldName, err = regexp.Compile("^([a-z][a-z0-9_]*(?:\\.)?)+$")
+	legalFieldName, err = regexp.Compile(`^([a-z][a-z0-9_]*(?:\.)?)+$`)
 	if err != nil {
 		log.Fatalf("Unexpected error: %v", err)
 	}
 
-	dplPrefix, err = regexp.Compile("^dpl\\.")
+	dplPrefix, err = regexp.Compile(`^dpl\.`)
 	if err != nil {
 		log.Fatalf("Unexpected error: %v", err)
 	}

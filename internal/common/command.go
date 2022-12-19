@@ -121,7 +121,7 @@ type failedTask struct {
 	dependents    []string
 }
 
-func (self *failedTask) Error() string {
+func (ft *failedTask) Error() string {
 	return ""
 }
 

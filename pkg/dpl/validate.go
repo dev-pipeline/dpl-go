@@ -1,7 +1,6 @@
 package dpl
 
 import (
-	"errors"
 	"fmt"
 )
 
@@ -50,7 +49,7 @@ func ValidateProject(project Project) error {
 	for name, validator := range projectValidators {
 		err := validator(project)
 		if err != nil {
-			return errors.New(fmt.Sprintf("%v [%v]", err, name))
+			return fmt.Errorf("%v [%v]", err, name)
 		}
 	}
 	return nil

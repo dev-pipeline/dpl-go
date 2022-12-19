@@ -12,7 +12,7 @@ func applyConfig(config *ini.File) (*IniProject, error) {
 		config: config,
 	}
 	for _, component := range config.Sections() {
-		if component.Name() != ini.DEFAULT_SECTION {
+		if component.Name() != ini.DefaultSection {
 			projectComponent := IniComponent{
 				config: component,
 			}

@@ -1,7 +1,6 @@
 package scm
 
 import (
-	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -17,7 +16,7 @@ func extractArguments(raw string, separator string) (string, map[string]string, 
 	for _, arg := range chunks[1:] {
 		groups := argumentPattern.FindStringSubmatch(arg)
 		if groups == nil {
-			return "", nil, errors.New(fmt.Sprintf("Couldn't parse '%v'", arg))
+			return "", nil, fmt.Errorf("couldn't parse '%v'", arg)
 		}
 		args[groups[1]] = groups[2]
 	}

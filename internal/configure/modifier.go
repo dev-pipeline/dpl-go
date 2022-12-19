@@ -76,10 +76,6 @@ func newModifierSet() modifierSet {
 	}
 }
 
-type projectModifiers struct {
-	components map[string]modifierSet
-}
-
 func applyComponentModifiers(component dpl.Component, modifiers modifierSet) error {
 	for key, prepends := range modifiers.prependValues {
 		originalValues := component.GetValue(key)
@@ -95,7 +91,7 @@ func applyComponentModifiers(component dpl.Component, modifiers modifierSet) err
 		component.SetValue(key, overrides)
 	}
 
-	for key, _ := range modifiers.eraseValues {
+	for key := range modifiers.eraseValues {
 		component.EraseValue(key)
 	}
 	return nil

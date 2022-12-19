@@ -11,6 +11,12 @@ import (
 	"github.com/dev-pipeline/dpl-go/pkg/dpl"
 )
 
+var (
+	errCantFindComponent error = errors.New("couldn't find component")
+	errMissingKey        error = errors.New("missing key")
+	errTooManyExpansions error = errors.New("too many expansions")
+)
+
 type IniComponent struct {
 	config  *ini.Section
 	project *IniProject
@@ -58,7 +64,7 @@ func (ic *IniComponent) expandHelper(value string) (string, error) {
 			var found bool
 			iniComponent, found = ic.project.getConfigComponent(component)
 			if !found {
-				return "", errors.New("Couldn't find component")
+				return "", errCantFindComponent
 			}
 		}
 		if iniComponent.HasKey(key) {
@@ -68,11 +74,11 @@ func (ic *IniComponent) expandHelper(value string) (string, error) {
 				value = fmt.Sprintf("%v%v%v%v", value[:loc[0]], prefix, rawKey.Value(), value[loc[1]:])
 			}
 		} else {
-			return "", errors.New("Missing key")
+			return "", errMissingKey
 		}
 		count++
 	}
-	return "", errors.New("Too many expansions")
+	return "", errTooManyExpansions
 }
 
 func (ic *IniComponent) ExpandValue(name string) ([]string, error) {
@@ -110,7 +116,7 @@ type IniProject struct {
 }
 
 func (ip *IniProject) getDefaultComponent() (dpl.Component, error) {
-	section, err := ip.config.GetSection(ini.DEFAULT_SECTION)
+	section, err := ip.config.GetSection(ini.DefaultSection)
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +127,7 @@ func (ip *IniProject) getDefaultComponent() (dpl.Component, error) {
 }
 
 func (ip *IniProject) getConfigComponent(name string) (*ini.Section, bool) {
-	if name == ini.DEFAULT_SECTION {
+	if name == ini.DefaultSection {
 		return nil, false
 	}
 	component, err := ip.config.GetSection(name)

@@ -30,7 +30,7 @@ func applyOverrides(configRoot string, overrides []string, project dpl.Project) 
 		}
 		component, found := project.GetComponent(componentName)
 		if !found {
-			return errors.New(fmt.Sprintf("Internal error; component %v not found", componentName))
+			return fmt.Errorf("internal error; component %v not found", componentName)
 		}
 		err := applyComponentModifiers(component, modSet)
 		if err != nil {
