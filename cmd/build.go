@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/dev-pipeline/dpl-go/internal/build"
 	"github.com/dev-pipeline/dpl-go/internal/common"
 )
 
@@ -17,6 +18,9 @@ var (
 )
 
 func doBuild(cmd *cobra.Command, args []string) {
+	common.DoCommand(args, buildCommon, []common.Task{
+		build.BuildTask,
+	})
 }
 
 func init() {

@@ -34,6 +34,14 @@ func (rs *ResolveComponent) SetValue(string, []string) {
 func (rs *ResolveComponent) EraseValue(string) {
 }
 
+func (rs *ResolveComponent) GetSourceDir() string {
+	return ""
+}
+
+func (rs *ResolveComponent) GetWorkDir() string {
+	return ""
+}
+
 type ResolveComponents map[string]ResolveComponent
 
 type ResolveProject struct {

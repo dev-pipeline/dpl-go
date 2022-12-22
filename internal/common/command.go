@@ -2,6 +2,7 @@ package common
 
 import (
 	"log"
+	"os"
 	"strings"
 	"sync"
 
@@ -15,15 +16,15 @@ type Args struct {
 	Dependencies string
 }
 
-type taskFn func(dpl.Component) error
+type TaskFn func(dpl.Component) error
 
 type Task struct {
 	Name string
-	Work taskFn
+	Work TaskFn
 }
 
 type work struct {
-	fn        taskFn
+	fn        TaskFn
 	name      string
 	component dpl.Component
 }
@@ -53,9 +54,9 @@ func executeTasks(wg *sync.WaitGroup, taskChannel chan work, doneChannel chan ta
 	return nil
 }
 
-func makeTaskContainers(tasks []Task) ([]string, map[string]taskFn, error) {
+func makeTaskContainers(tasks []Task) ([]string, map[string]TaskFn, error) {
 	taskList := []string{}
-	taskMap := map[string]taskFn{}
+	taskMap := map[string]TaskFn{}
 
 	for _, task := range tasks {
 		taskMap[task.Name] = task.Work
@@ -80,7 +81,7 @@ func startDrainComplete(doneChannel chan taskComplete, completeFn taskCompleteFn
 	}()
 }
 
-func startResolve(project dpl.Project, resolver resolve.Resolver, taskMap map[string]taskFn) (chan work, error) {
+func startResolve(project dpl.Project, resolver resolve.Resolver, taskMap map[string]TaskFn) (chan work, error) {
 	workChannel := make(chan work)
 	go func() {
 		defer close(workChannel)
@@ -156,6 +157,7 @@ func runTasks(project dpl.Project, components []string, tasks []Task, resolveFn 
 		if completedTask.err == nil {
 			resolver.Complete(completedTask.name)
 		} else {
+			log.Printf("Error executing task '%v': %v", completedTask.name, completedTask.err)
 			var dependents []string
 			if keepGoing {
 				dependents = resolver.Fail(completedTask.name)
@@ -180,11 +182,15 @@ func runTasks(project dpl.Project, components []string, tasks []Task, resolveFn 
 	if len(errors) == 0 {
 		return nil
 	}
+	log.Printf("%v total error(s)", len(errors))
 	return errors[0]
 }
 
 func DoCommand(components []string, args Args, tasks []Task) {
-	var project dpl.Project = nil // TODO: load project
+	project, err := dpl.LoadProject()
+	if err != nil {
+		log.Fatalf("Failed to load project: %v", err)
+	}
 
 	if len(components) == 0 {
 		components = project.Components()
@@ -193,6 +199,9 @@ func DoCommand(components []string, args Args, tasks []Task) {
 	if resolveFn == nil {
 		log.Fatalf("No resolver '%v'", args.Dependencies)
 	} else {
-		runTasks(project, components, tasks, resolveFn, args.KeepGoing)
+		err := runTasks(project, components, tasks, resolveFn, args.KeepGoing)
+		if err != nil {
+			os.Exit(1)
+		}
 	}
 }

@@ -5,7 +5,10 @@ import (
 	"log"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
+
+	"github.com/dev-pipeline/dpl-go/pkg/dpl"
 )
 
 type Flags struct {
@@ -20,6 +23,13 @@ type Flags struct {
 const (
 	cacheDirName  string = ".dpl"
 	cacheFileName string = "build.cache"
+
+	loaderString string = "configure"
+)
+
+var (
+	errMissingSourceDir error = fmt.Errorf("project missing source directory information")
+	errMissingWorkDir   error = fmt.Errorf("project missing work directory information")
 )
 
 func (f Flags) getBuildDir() string {
@@ -45,6 +55,12 @@ func DoConfigure(flags Flags, args []string) {
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
+
+	sourceFileAbsPath, err := filepath.Abs(flags.ConfigFile)
+	if err != nil {
+		log.Fatalf("Error: %v", err)
+	}
+	sourceDirAbsPath := path.Dir(sourceFileAbsPath)
 
 	homedir, err := os.UserHomeDir()
 	if err != nil {
@@ -77,12 +93,56 @@ func DoConfigure(flags Flags, args []string) {
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
+
+	workDirAbsPath, err := filepath.Abs(flags.getBuildDir())
+	if err != nil {
+		log.Fatalf("Error: %v", err)
+	}
+	defaultComponent.SetValue("dpl.build_config", []string{sourceFileAbsPath})
+	defaultComponent.SetValue("dpl.src_dir", []string{sourceDirAbsPath})
+	defaultComponent.SetValue("dpl.work_dir", []string{workDirAbsPath})
+
 	outConfig, err := os.Create(cacheFile)
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
 	defer outConfig.Close()
 	err = project.Write(outConfig)
+	if err != nil {
+		log.Fatalf("Error: %v", err)
+	}
+	err = dpl.WriteProject(cacheDir, loaderString)
+	if err != nil {
+		log.Fatalf("Error: %v", err)
+	}
+}
+
+func loadExistingProject(cacheDir string) (dpl.Project, error) {
+	configPath := path.Join(cacheDir, cacheFileName)
+	project, err := loadConfig(configPath)
+	if err != nil {
+		return nil, err
+	}
+
+	defaultComponent, err := project.getDefaultComponent()
+	if err != nil {
+		return nil, err
+	}
+	srcDir := defaultComponent.GetValue("dpl.src_dir")
+	if len(srcDir) != 1 {
+		return nil, errMissingSourceDir
+	}
+	project.srcDir = srcDir[0]
+	workDir := defaultComponent.GetValue("dpl.work_dir")
+	if len(workDir) != 1 {
+		return nil, errMissingWorkDir
+	}
+	project.workDir = workDir[0]
+	return project, err
+}
+
+func init() {
+	err := dpl.RegisterLoader(loaderString, loadExistingProject)
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}

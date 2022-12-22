@@ -11,6 +11,6 @@ func addCommonArgs(command *cobra.Command, args *common.Args) {
 		"Continue performing work even if a task fails")
 	command.PersistentFlags().StringVar(&args.Executor, "executor", "",
 		"Method of executing work")
-	command.PersistentFlags().StringVar(&args.Dependencies, "dependencies", "",
+	command.PersistentFlags().StringVar(&args.Dependencies, "dependencies", "deep",
 		"Method of resolving dependencies")
 }

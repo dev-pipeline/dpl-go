@@ -30,3 +30,11 @@ func (tc *trivialComponent) SetValue(string, []string) {
 
 func (tc *trivialComponent) EraseValue(string) {
 }
+
+func (tc *trivialComponent) GetSourceDir() string {
+	return ""
+}
+
+func (tc *trivialComponent) GetWorkDir() string {
+	return ""
+}

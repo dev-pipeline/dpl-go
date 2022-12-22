@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"path"
 	"regexp"
 
 	"gopkg.in/ini.v1"
@@ -33,6 +34,15 @@ func (ic *IniComponent) ValueNames() []string {
 func (ic *IniComponent) GetValue(name string) []string {
 	if ic.config.HasKey(name) {
 		return ic.config.Key(name).ValueWithShadows()
+	} else {
+		defaultComponent, err := ic.project.config.GetSection(ini.DefaultSection)
+		if err != nil {
+			// swallow error on purpose
+			return nil
+		}
+		if defaultComponent.HasKey(name) {
+			return defaultComponent.Key(name).ValueWithShadows()
+		}
 	}
 	return nil
 }
@@ -111,8 +121,18 @@ func (ic *IniComponent) EraseValue(name string) {
 	ic.config.DeleteKey(name)
 }
 
+func (ic *IniComponent) GetSourceDir() string {
+	return path.Join(ic.project.srcDir, ic.Name())
+}
+
+func (ic *IniComponent) GetWorkDir() string {
+	return path.Join(ic.project.workDir, ic.Name())
+}
+
 type IniProject struct {
-	config *ini.File
+	config  *ini.File
+	workDir string
+	srcDir  string
 }
 
 func (ip *IniProject) getDefaultComponent() (dpl.Component, error) {
