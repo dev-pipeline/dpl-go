@@ -33,8 +33,10 @@ coverage:
 	go tool cover -html=coverage.out -o coverage.html
 
 install: dpl
-	if [ -z "${DESTDIR}" ]; then \
-		cp dpl "\${DESTDIR}/bin/"; \
+	if [ -n "${DESTDIR}" ]; then \
+		mkdir -p "${DESTDIR}/bin/"; \
+		cp dpl "${DESTDIR}/bin/"; \
 	else \
+		mkdir -p "$(shell go env GOPATH)/bin"; \
 		cp dpl "$(shell go env GOPATH)/bin"; \
 	fi
