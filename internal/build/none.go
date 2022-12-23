@@ -7,15 +7,15 @@ import (
 type noneBuilder struct {
 }
 
-func (nb noneBuilder) Configure() error {
+func (nb noneBuilder) Configure(*BuildConfig) error {
 	return nil
 }
 
-func (nb noneBuilder) Build() error {
+func (nb noneBuilder) Build(*BuildConfig) error {
 	return nil
 }
 
-func (nb noneBuilder) Install() error {
+func (nb noneBuilder) Install(destdir string) error {
 	return nil
 }
 

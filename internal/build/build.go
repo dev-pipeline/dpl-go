@@ -3,6 +3,7 @@ package build
 import (
 	"fmt"
 	"log"
+	"path"
 
 	"github.com/dev-pipeline/dpl-go/internal/common"
 	"github.com/dev-pipeline/dpl-go/pkg/dpl"
@@ -25,10 +26,14 @@ var (
 	errInvalidBuilder    error = fmt.Errorf("invalid builder")
 )
 
+type BuildConfig struct {
+	Env []string
+}
+
 type Builder interface {
-	Configure() error
-	Build() error
-	Install() error
+	Configure(*BuildConfig) error
+	Build(*BuildConfig) error
+	Install(string) error
 }
 
 type MakeBuilder func(dpl.Component) (Builder, error)
@@ -52,15 +57,16 @@ func doBuild(component dpl.Component) error {
 		return err
 	}
 
-	err = actualBuilder.Configure()
+	config := &BuildConfig{}
+	err = actualBuilder.Configure(config)
 	if err != nil {
 		return err
 	}
-	err = actualBuilder.Build()
+	err = actualBuilder.Build(config)
 	if err != nil {
 		return err
 	}
-	err = actualBuilder.Install()
+	err = actualBuilder.Install(path.Join(component.GetWorkDir(), "install"))
 	if err != nil {
 		return err
 	}
