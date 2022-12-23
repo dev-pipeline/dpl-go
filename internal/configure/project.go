@@ -52,24 +52,27 @@ const (
 )
 
 func (ic *IniComponent) expandHelper(value string) (string, error) {
-	pattern, err := regexp.Compile(`(^|[^\\])(?:\${(?:([a-z]+)\.)?([a-z]+)})`)
+	pattern, err := regexp.Compile(`(^|[^\\])(?:\${(?:([a-z_\-]+):)?((?:[a-zA-Z0-9_]+\.)*[a-zA-Z0-9)_]+)})`)
 	if err != nil {
 		return "", err
 	}
 
 	count := 0
+	iniComponent := ic.config
 	for count < expandLimit {
 		groups := pattern.FindStringSubmatch(value)
 
 		if groups == nil {
 			// done expanding
+			if value == "<empty>" {
+				value = ""
+			}
 			return value, nil
 		}
 		prefix := groups[1]
 		component := groups[2]
 		key := groups[3]
 
-		iniComponent := ic.config
 		if len(component) != 0 {
 			var found bool
 			iniComponent, found = ic.project.getConfigComponent(component)
