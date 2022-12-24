@@ -17,14 +17,29 @@ const (
 var (
 	BuildTask common.Task = common.Task{
 		Name: "build",
-		Work: doBuild,
+		Work: doFullBuild,
 	}
 
 	builders map[string]MakeBuilder = map[string]MakeBuilder{}
 
-	errAlreadyRegistered error = fmt.Errorf("builder already registered")
-	errTooManyBuilders   error = fmt.Errorf("multiple builders")
-	errInvalidBuilder    error = fmt.Errorf("invalid builder")
+	errAlreadyRegistered      error = fmt.Errorf("builder already registered")
+	errTooManyBuilders        error = fmt.Errorf("multiple builders")
+	errInvalidBuilder         error = fmt.Errorf("invalid builder")
+	errMultipleInstallMethods error = fmt.Errorf("multiple install methods specified")
+	errInvalidInstallMethod   error = fmt.Errorf("unknown installation method")
+
+	buildSteps []buildStep = []buildStep{
+		doConfigure,
+		doBuild,
+		doInstall,
+	}
+
+	defaultInstallMethod []string = []string{"default"}
+
+	installHandlers map[string]installFn = map[string]installFn{
+		"default": defaultInstaller,
+		"none":    noneInstaller,
+	}
 )
 
 type BuildConfig struct {
@@ -39,7 +54,45 @@ type Builder interface {
 
 type MakeBuilder func(dpl.Component) (Builder, error)
 
-func doBuild(component dpl.Component) error {
+type buildStep func(Builder, dpl.Component, *BuildConfig) error
+
+type installFn func(Builder, dpl.Component, *BuildConfig) error
+
+func doConfigure(builder Builder, component dpl.Component, config *BuildConfig) error {
+	return builder.Configure(config)
+}
+
+func doBuild(builder Builder, component dpl.Component, config *BuildConfig) error {
+	return builder.Build(config)
+}
+
+func doInstall(builder Builder, component dpl.Component, config *BuildConfig) error {
+	installMethod, err := component.ExpandValue("build.install_method")
+	if err != nil {
+		return err
+	}
+	if len(installMethod) > 1 {
+		return errMultipleInstallMethods
+	}
+	if len(installMethod) == 0 {
+		installMethod = defaultInstallMethod
+	}
+	installer, found := installHandlers[installMethod[0]]
+	if !found {
+		return errInvalidInstallMethod
+	}
+	return installer(builder, component, config)
+}
+
+func defaultInstaller(builder Builder, component dpl.Component, config *BuildConfig) error {
+	return builder.Install(path.Join(component.GetWorkDir(), "install"))
+}
+
+func noneInstaller(Builder, dpl.Component, *BuildConfig) error {
+	return nil
+}
+
+func doFullBuild(component dpl.Component) error {
 	builder := component.GetValue(buildToolKey)
 	if len(builder) != 1 {
 		if len(builder) == 0 {
@@ -62,7 +115,7 @@ func doBuild(component dpl.Component) error {
 	if err != nil {
 		return err
 	}
-	config := &BuildConfig{
+	config := BuildConfig{
 		Env: os.Environ(),
 	}
 	for k, v := range envChanges.prependValues {
@@ -72,19 +125,12 @@ func doBuild(component dpl.Component) error {
 		config.Env = appendEnvironment(config.Env, k, v)
 	}
 
-	err = actualBuilder.Configure(config)
-	if err != nil {
-		return err
+	for i := range buildSteps {
+		err := buildSteps[i](actualBuilder, component, &config)
+		if err != nil {
+			return err
+		}
 	}
-	err = actualBuilder.Build(config)
-	if err != nil {
-		return err
-	}
-	err = actualBuilder.Install(path.Join(component.GetWorkDir(), "install"))
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
