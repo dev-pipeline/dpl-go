@@ -5,14 +5,14 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/dev-pipeline/dpl-go/internal/build"
 	"github.com/dev-pipeline/dpl-go/pkg/dpl"
 )
 
 type cmakeBuilder struct {
-	sourceDir string
-	workDir   string
+	component dpl.Component
 }
 
 type cmakeFlags struct {
@@ -22,7 +22,7 @@ type cmakeFlags struct {
 
 func (cb cmakeBuilder) runCmake(cf cmakeFlags) error {
 	cmd := exec.Command("cmake", cf.args...)
-	cmd.Dir = cb.workDir
+	cmd.Dir = cb.component.GetWorkDir()
 	if len(cf.env) > 0 {
 		cmd.Env = cf.env
 	}
@@ -35,15 +35,21 @@ func (cb cmakeBuilder) runCmake(cf cmakeFlags) error {
 }
 
 func (cb cmakeBuilder) Configure(config *build.BuildConfig) error {
-	log.Printf("creating %v", cb.workDir)
-	err := os.MkdirAll(cb.workDir, 0755)
+	err := os.MkdirAll(cb.component.GetWorkDir(), 0755)
 	if err != nil {
 		return err
 	}
+	args := []string{}
+	modulePath, err := cb.component.ExpandValue("cmake.module_path")
+	if err != nil {
+		return err
+	}
+	if len(modulePath) > 1 {
+		args = append(args, fmt.Sprintf("-DCMAKE_MODULE_PATH=%v", strings.Join(modulePath, ";")))
+	}
 	return cb.runCmake(cmakeFlags{
-		args: []string{
-			cb.sourceDir,
-		},
+		args: append(args, cb.component.GetSourceDir()),
+		env:  config.Env,
 	})
 }
 
@@ -51,8 +57,9 @@ func (cb cmakeBuilder) Build(config *build.BuildConfig) error {
 	return cb.runCmake(cmakeFlags{
 		args: []string{
 			"--build",
-			cb.workDir,
+			cb.component.GetWorkDir(),
 		},
+		env: config.Env,
 	})
 }
 
@@ -64,7 +71,7 @@ func (cb cmakeBuilder) Install(destdir string) error {
 	return cb.runCmake(cmakeFlags{
 		args: []string{
 			"--build",
-			cb.workDir,
+			cb.component.GetWorkDir(),
 			"--target",
 			"install",
 		},
@@ -75,8 +82,7 @@ func (cb cmakeBuilder) Install(destdir string) error {
 func init() {
 	build.RegisterBuilder("cmake", func(component dpl.Component) (build.Builder, error) {
 		return &cmakeBuilder{
-			sourceDir: component.GetSourceDir(),
-			workDir:   component.GetWorkDir(),
+			component: component,
 		}, nil
 	})
 }

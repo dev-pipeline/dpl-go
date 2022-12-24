@@ -3,6 +3,7 @@ package build
 import (
 	"fmt"
 	"log"
+	"os"
 	"path"
 
 	"github.com/dev-pipeline/dpl-go/internal/common"
@@ -57,7 +58,20 @@ func doBuild(component dpl.Component) error {
 		return err
 	}
 
-	config := &BuildConfig{}
+	envChanges, err := makeEnvMap(component)
+	if err != nil {
+		return err
+	}
+	config := &BuildConfig{
+		Env: os.Environ(),
+	}
+	for k, v := range envChanges.prependValues {
+		config.Env = prependEnvironment(config.Env, k, v)
+	}
+	for k, v := range envChanges.appendValues {
+		config.Env = appendEnvironment(config.Env, k, v)
+	}
+
 	err = actualBuilder.Configure(config)
 	if err != nil {
 		return err
