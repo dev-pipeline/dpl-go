@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"path"
 	"regexp"
 
@@ -13,6 +14,8 @@ import (
 )
 
 var (
+	expandedPattern *regexp.Regexp
+
 	errCantFindComponent error = errors.New("couldn't find component")
 	errMissingKey        error = errors.New("missing key")
 	errTooManyExpansions error = errors.New("too many expansions")
@@ -51,63 +54,68 @@ const (
 	expandLimit = 100
 )
 
-func (ic *IniComponent) expandHelper(value string) (string, error) {
-	pattern, err := regexp.Compile(`(^|[^\\])(?:\${(?:([a-z_\-]+):)?((?:[a-zA-Z0-9_]+\.)*[a-zA-Z0-9)_]+)})`)
+func (ic *IniComponent) expandRecursively(value string, count int) ([]string, error) {
+	if count > expandLimit {
+		return nil, errTooManyExpansions
+	}
+	groups := expandedPattern.FindStringSubmatch(value)
+	if groups == nil {
+		// done expanding
+		if value == "<empty>" {
+			return []string{""}, nil
+		}
+		return []string{value}, nil
+	}
+	prefix := groups[1]
+	component := groups[2]
+	key := groups[3]
+
+	iniComponent := ic
+	if len(component) != 0 {
+		var found bool
+		iniComponent, found = ic.project.getConfigComponent(component)
+		if !found {
+			return nil, errCantFindComponent
+		}
+	}
+	if !iniComponent.config.HasKey(key) {
+		return nil, errMissingKey
+	}
+	expanded, err := iniComponent.expandValueInternal(key, count+1)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-
-	count := 0
-	iniComponent := ic.config
-	for count < expandLimit {
-		groups := pattern.FindStringSubmatch(value)
-
-		if groups == nil {
-			// done expanding
-			if value == "<empty>" {
-				value = ""
-			}
-			return value, nil
+	ret := []string{}
+	for i := range expanded {
+		loc := expandedPattern.FindStringIndex(value)
+		nextValue := fmt.Sprintf("%v%v%v%v", value[:loc[0]], prefix, expanded[i], value[loc[1]:])
+		nextExpanded, err := ic.expandRecursively(nextValue, count+1)
+		if err != nil {
+			return nil, err
 		}
-		prefix := groups[1]
-		component := groups[2]
-		key := groups[3]
-
-		if len(component) != 0 {
-			var found bool
-			iniComponent, found = ic.project.getConfigComponent(component)
-			if !found {
-				return "", errCantFindComponent
-			}
-		}
-		if iniComponent.HasKey(key) {
-			rawKey := iniComponent.Key(key)
-			if rawKey != nil {
-				loc := pattern.FindStringIndex(value)
-				value = fmt.Sprintf("%v%v%v%v", value[:loc[0]], prefix, rawKey.Value(), value[loc[1]:])
-			}
-		} else {
-			return "", errMissingKey
-		}
-		count++
+		ret = append(ret, nextExpanded...)
 	}
-	return "", errTooManyExpansions
+	return ret, nil
 }
 
-func (ic *IniComponent) ExpandValue(name string) ([]string, error) {
+func (ic *IniComponent) expandValueInternal(name string, count int) ([]string, error) {
 	rawValues := ic.GetValue(name)
 	if rawValues == nil {
 		return nil, nil
 	}
-	expandedValues := make([]string, len(rawValues))
-	for index, value := range rawValues {
-		expandedValue, err := ic.expandHelper(value)
+	ret := []string{}
+	for index := range rawValues {
+		expandedValues, err := ic.expandRecursively(rawValues[index], count)
 		if err != nil {
 			return nil, err
 		}
-		expandedValues[index] = expandedValue
+		ret = append(ret, expandedValues...)
 	}
-	return expandedValues, nil
+	return ret, nil
+}
+
+func (ic *IniComponent) ExpandValue(name string) ([]string, error) {
+	return ic.expandValueInternal(name, 0)
 }
 
 func (ic *IniComponent) SetValue(name string, values []string) {
@@ -149,7 +157,7 @@ func (ip *IniProject) getDefaultComponent() (dpl.Component, error) {
 	}, nil
 }
 
-func (ip *IniProject) getConfigComponent(name string) (*ini.Section, bool) {
+func (ip *IniProject) getConfigComponent(name string) (*IniComponent, bool) {
 	if name == ini.DefaultSection {
 		return nil, false
 	}
@@ -157,18 +165,14 @@ func (ip *IniProject) getConfigComponent(name string) (*ini.Section, bool) {
 	if err != nil {
 		return nil, false
 	}
-	return component, true
-}
-
-func (ip *IniProject) GetComponent(name string) (dpl.Component, bool) {
-	component, found := ip.getConfigComponent(name)
-	if !found {
-		return nil, false
-	}
 	return &IniComponent{
 		config:  component,
 		project: ip,
 	}, true
+}
+
+func (ip *IniProject) GetComponent(name string) (dpl.Component, bool) {
+	return ip.getConfigComponent(name)
 }
 
 func (ip *IniProject) Components() []string {
@@ -178,4 +182,12 @@ func (ip *IniProject) Components() []string {
 func (ip *IniProject) Write(writer io.Writer) error {
 	_, err := ip.config.WriteTo(writer)
 	return err
+}
+
+func init() {
+	var err error
+	expandedPattern, err = regexp.Compile(`(^|[^\\])(?:\${(?:([a-z_\-]+):)?((?:[a-zA-Z0-9_]+\.)*[a-zA-Z0-9)_]+)})`)
+	if err != nil {
+		log.Fatalf("Error compiling pattern: %v", err)
+	}
 }
