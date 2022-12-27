@@ -28,8 +28,9 @@ const (
 )
 
 var (
-	errMissingSourceDir error = fmt.Errorf("project missing source directory information")
-	errMissingWorkDir   error = fmt.Errorf("project missing work directory information")
+	errMissingSourceDir     error = fmt.Errorf("project missing source directory information")
+	errMissingWorkDir       error = fmt.Errorf("project missing work directory information")
+	errCouldntLoadComponent error = fmt.Errorf("couldn't load component")
 )
 
 func (f Flags) getBuildDir() string {
@@ -52,6 +53,10 @@ func getCachePath(f Flags) (string, string) {
 
 func DoConfigure(flags Flags, args []string) {
 	project, err := loadConfig(flags.ConfigFile)
+	if err != nil {
+		log.Fatalf("Error: %v", err)
+	}
+	err = validateProject(project)
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
@@ -101,6 +106,16 @@ func DoConfigure(flags Flags, args []string) {
 	defaultComponent.SetValue("dpl.build_config", []string{sourceFileAbsPath})
 	defaultComponent.SetValue("dpl.src_dir", []string{sourceDirAbsPath})
 	defaultComponent.SetValue("dpl.work_dir", []string{workDirAbsPath})
+
+	components := project.Components()
+	for i := range components {
+		component, found := project.GetComponent(components[i])
+		if !found {
+			log.Fatalf("Error: %v", errCouldntLoadComponent)
+		}
+		component.SetValue("dpl.source_dir", []string{path.Join(sourceDirAbsPath, component.Name())})
+		component.SetValue("dpl.work_dir", []string{path.Join(workDirAbsPath, component.Name())})
+	}
 
 	outConfig, err := os.Create(cacheFile)
 	if err != nil {

@@ -7,27 +7,19 @@ import (
 	"github.com/dev-pipeline/dpl-go/pkg/dpl/configfile"
 )
 
-func applyConfig(config *ini.File) (*IniProject, error) {
-	project := IniProject{
-		config: config,
-	}
-	for _, component := range config.Sections() {
+func validateProject(project *IniProject) error {
+	for _, component := range project.config.Sections() {
 		if component.Name() != ini.DefaultSection {
 			projectComponent := IniComponent{
 				config: component,
 			}
 			err := dpl.ValidateComponent(&projectComponent)
 			if err != nil {
-				return nil, err
+				return err
 			}
 		}
 	}
-	err := dpl.ValidateProject(&project)
-	if err != nil {
-		return nil, err
-	}
-
-	return &project, nil
+	return dpl.ValidateProject(project)
 }
 
 func loadRawConfig(data []byte) (*IniProject, error) {
@@ -35,7 +27,10 @@ func loadRawConfig(data []byte) (*IniProject, error) {
 	if err != nil {
 		return nil, err
 	}
-	project, err := applyConfig(configFile)
+	project := &IniProject{
+		config: configFile,
+	}
+	err = validateProject(project)
 	if err != nil {
 		return nil, err
 	}
@@ -47,9 +42,8 @@ func loadConfig(path string) (*IniProject, error) {
 	if err != nil {
 		return nil, err
 	}
-	project, err := applyConfig(configFile)
-	if err != nil {
-		return nil, err
+	project := &IniProject{
+		config: configFile,
 	}
 	return project, nil
 }
