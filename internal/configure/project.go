@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"os"
 	"path"
 	"regexp"
 
@@ -141,9 +142,11 @@ func (ic *IniComponent) GetWorkDir() string {
 }
 
 type IniProject struct {
-	config  *ini.File
-	workDir string
-	srcDir  string
+	config     *ini.File
+	workDir    string
+	srcDir     string
+	configFile string
+	dirty      bool
 }
 
 func (ip *IniProject) getDefaultComponent() (dpl.Component, error) {
@@ -179,8 +182,20 @@ func (ip *IniProject) Components() []string {
 	return ip.config.SectionStrings()[1:]
 }
 
-func (ip *IniProject) Write(writer io.Writer) error {
+func (ip *IniProject) Write() error {
+	outConfig, err := os.Create(ip.configFile)
+	if err != nil {
+		return err
+	}
+	defer outConfig.Close()
+	return ip.write(outConfig)
+}
+
+func (ip *IniProject) write(writer io.Writer) error {
 	_, err := ip.config.WriteTo(writer)
+	if err == nil {
+		ip.dirty = false
+	}
 	return err
 }
 

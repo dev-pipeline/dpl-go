@@ -122,7 +122,7 @@ func DoConfigure(flags Flags, args []string) {
 		log.Fatalf("Error: %v", err)
 	}
 	defer outConfig.Close()
-	err = project.Write(outConfig)
+	err = project.write(outConfig)
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}

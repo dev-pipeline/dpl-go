@@ -200,6 +200,7 @@ func DoCommand(components []string, args Args, tasks []Task) {
 		log.Fatalf("No resolver '%v'", args.Dependencies)
 	} else {
 		err := runTasks(project, components, tasks, resolveFn, args.KeepGoing)
+		project.Write()
 		if err != nil {
 			os.Exit(1)
 		}

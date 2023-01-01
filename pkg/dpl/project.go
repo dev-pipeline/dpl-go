@@ -20,6 +20,7 @@ type Component interface {
 type Project interface {
 	GetComponent(string) (Component, bool)
 	Components() []string
+	Write() error
 }
 
 type ProjectLoader func(string) (Project, error)

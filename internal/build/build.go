@@ -11,7 +11,8 @@ import (
 )
 
 const (
-	buildToolKey string = "build.tool"
+	buildToolKey   string = "build.tool"
+	installPathKey string = "build.install_path"
 )
 
 var (
@@ -26,6 +27,7 @@ var (
 	errTooManyBuilders        error = fmt.Errorf("multiple builders")
 	errInvalidBuilder         error = fmt.Errorf("invalid builder")
 	errMultipleInstallMethods error = fmt.Errorf("multiple install methods specified")
+	errMultipleInstallPaths   error = fmt.Errorf("multiple install paths specified")
 	errInvalidInstallMethod   error = fmt.Errorf("unknown installation method")
 
 	buildSteps []buildStep = []buildStep{
@@ -35,6 +37,7 @@ var (
 	}
 
 	defaultInstallMethod []string = []string{"default"}
+	defaultInstallPath   []string = []string{"install"}
 
 	installHandlers map[string]installFn = map[string]installFn{
 		"default": defaultInstaller,
@@ -85,7 +88,17 @@ func doInstall(builder Builder, component dpl.Component, config *BuildConfig) er
 }
 
 func defaultInstaller(builder Builder, component dpl.Component, config *BuildConfig) error {
-	return builder.Install(path.Join(component.GetWorkDir(), "install"))
+	installPath, err := component.ExpandValue(installPathKey)
+	if err != nil {
+		return err
+	}
+	if len(installPath) > 1 {
+		return errMultipleInstallPaths
+	}
+	if len(installPath) == 0 {
+		installPath = defaultInstallPath
+	}
+	return builder.Install(path.Join(component.GetWorkDir(), installPath[0]))
 }
 
 func noneInstaller(Builder, dpl.Component, *BuildConfig) error {
@@ -131,6 +144,12 @@ func doFullBuild(component dpl.Component) error {
 			return err
 		}
 	}
+
+	err = findAllArtifacts(component, buildArtifactPath, component.GetWorkDir())
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

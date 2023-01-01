@@ -63,3 +63,7 @@ func (rp *ResolveProject) Components() []string {
 	}
 	return names
 }
+
+func (rp *ResolveProject) Write() error {
+	return nil
+}

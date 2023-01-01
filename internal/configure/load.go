@@ -43,7 +43,8 @@ func loadConfig(path string) (*IniProject, error) {
 		return nil, err
 	}
 	project := &IniProject{
-		config: configFile,
+		config:     configFile,
+		configFile: path,
 	}
 	return project, nil
 }
