@@ -44,7 +44,7 @@ func TestSimpleDepsReverse(t *testing.T) {
 			targets[0]: testcommon.ResolveComponent{},
 			targets[1]: testcommon.ResolveComponent{
 				Data: map[string][]string{
-					"depends.build": []string{"foo"},
+					"depends.build": {"foo"},
 				},
 			},
 		},
@@ -88,17 +88,17 @@ func TestDiamondDepsReverse(t *testing.T) {
 			targets[0]: testcommon.ResolveComponent{},
 			targets[1]: testcommon.ResolveComponent{
 				Data: map[string][]string{
-					"depends.build": []string{"foo"},
+					"depends.build": {"foo"},
 				},
 			},
 			targets[2]: testcommon.ResolveComponent{
 				Data: map[string][]string{
-					"depends.build": []string{"foo"},
+					"depends.build": {"foo"},
 				},
 			},
 			targets[3]: testcommon.ResolveComponent{
 				Data: map[string][]string{
-					"depends.build": []string{
+					"depends.build": {
 						"bar",
 						"baz",
 					},
@@ -147,17 +147,17 @@ func TestFailDiamondDepsReverse(t *testing.T) {
 			targets[0]: testcommon.ResolveComponent{},
 			targets[1]: testcommon.ResolveComponent{
 				Data: map[string][]string{
-					"depends.build": []string{"foo"},
+					"depends.build": {"foo"},
 				},
 			},
 			targets[2]: testcommon.ResolveComponent{
 				Data: map[string][]string{
-					"depends.build": []string{"foo"},
+					"depends.build": {"foo"},
 				},
 			},
 			targets[3]: testcommon.ResolveComponent{
 				Data: map[string][]string{
-					"depends.build": []string{
+					"depends.build": {
 						"bar",
 						"baz",
 					},

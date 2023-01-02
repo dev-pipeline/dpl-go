@@ -15,17 +15,17 @@ var (
 			"foo": testcommon.ResolveComponent{},
 			"bar": testcommon.ResolveComponent{
 				Data: map[string][]string{
-					"depends.build": []string{"foo"},
+					"depends.build": {"foo"},
 				},
 			},
 			"baz": testcommon.ResolveComponent{
 				Data: map[string][]string{
-					"depends.build": []string{"foo"},
+					"depends.build": {"foo"},
 				},
 			},
 			"biz": testcommon.ResolveComponent{
 				Data: map[string][]string{
-					"depends.build": []string{
+					"depends.build": {
 						"bar",
 						"baz",
 					},
@@ -39,13 +39,13 @@ var (
 			"foo": testcommon.ResolveComponent{},
 			"bar": testcommon.ResolveComponent{
 				Data: map[string][]string{
-					"depends.build": []string{"foo"},
+					"depends.build": {"foo"},
 				},
 			},
 			"baz": testcommon.ResolveComponent{},
 			"biz": testcommon.ResolveComponent{
 				Data: map[string][]string{
-					"depends.build": []string{
+					"depends.build": {
 						"baz",
 					},
 				},
@@ -58,7 +58,7 @@ func TestCleanRun(t *testing.T) {
 	executeCount := 0
 	resolveFn := resolve.GetResolver("deep")
 	tasks := []Task{
-		Task{
+		{
 			Name: "build",
 			Work: func(component dpl.Component) error {
 				executeCount++
@@ -80,7 +80,7 @@ func TestErrorRun(t *testing.T) {
 	executeCount := 0
 	resolveFn := resolve.GetResolver("deep")
 	tasks := []Task{
-		Task{
+		{
 			Name: "build",
 			Work: func(component dpl.Component) error {
 				executeCount++
@@ -102,7 +102,7 @@ func TestRecoverError(t *testing.T) {
 	executeCount := 0
 	resolveFn := resolve.GetResolver("deep")
 	tasks := []Task{
-		Task{
+		{
 			Name: "build",
 			Work: func(component dpl.Component) error {
 				executeCount++

@@ -55,14 +55,14 @@ func TestLoadOverride(t *testing.T) {
 		}
 
 		expectedValues := map[string]map[string][]string{
-			"foo": map[string][]string{
-				"x": []string{
+			"foo": {
+				"x": {
 					"a",
 					"b",
 				},
 			},
-			"bar": map[string][]string{
-				"x": []string{
+			"bar": {
+				"x": {
 					"b",
 				},
 			},

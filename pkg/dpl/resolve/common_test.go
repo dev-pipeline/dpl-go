@@ -99,7 +99,7 @@ func TestLinearReverseDeps(t *testing.T) {
 			targets[0]: testcommon.ResolveComponent{},
 			targets[1]: testcommon.ResolveComponent{
 				Data: map[string][]string{
-					"depends.build": []string{"foo"},
+					"depends.build": {"foo"},
 				},
 			},
 		},
@@ -127,7 +127,7 @@ func TestImplicitComponentTasks(t *testing.T) {
 			targets[0]: testcommon.ResolveComponent{},
 			targets[1]: testcommon.ResolveComponent{
 				Data: map[string][]string{
-					"depends.build": []string{"foo"},
+					"depends.build": {"foo"},
 				},
 			},
 		},
@@ -161,17 +161,17 @@ func TestDiamondReverseDeps(t *testing.T) {
 			targets[0]: testcommon.ResolveComponent{},
 			targets[1]: testcommon.ResolveComponent{
 				Data: map[string][]string{
-					"depends.build": []string{"foo"},
+					"depends.build": {"foo"},
 				},
 			},
 			targets[2]: testcommon.ResolveComponent{
 				Data: map[string][]string{
-					"depends.build": []string{"foo"},
+					"depends.build": {"foo"},
 				},
 			},
 			targets[3]: testcommon.ResolveComponent{
 				Data: map[string][]string{
-					"depends.build": []string{
+					"depends.build": {
 						"bar",
 						"baz",
 					},
@@ -208,7 +208,7 @@ func TestCircularReverseDeps(t *testing.T) {
 		Comps: testcommon.ResolveComponents{
 			targets[0]: testcommon.ResolveComponent{
 				Data: map[string][]string{
-					"depends.build": []string{targets[0]},
+					"depends.build": {targets[0]},
 				},
 			},
 		},
@@ -234,7 +234,7 @@ func TestMissingComponentReverseDeps(t *testing.T) {
 		Comps: testcommon.ResolveComponents{
 			targets[0]: testcommon.ResolveComponent{
 				Data: map[string][]string{
-					"depends.build": []string{targets[1]},
+					"depends.build": {targets[1]},
 				},
 			},
 		},

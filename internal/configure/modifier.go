@@ -26,15 +26,15 @@ func loadModifierConfig(filename string, modSet modifierSet) error {
 	}
 
 	sections := []shadowSection{
-		shadowSection{
+		{
 			name: "prepend",
 			data: modSet.prependValues,
 		},
-		shadowSection{
+		{
 			name: "append",
 			data: modSet.appendValues,
 		},
-		shadowSection{
+		{
 			name: "override",
 			data: modSet.overrideValues,
 		},

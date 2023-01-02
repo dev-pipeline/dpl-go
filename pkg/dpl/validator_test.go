@@ -28,7 +28,7 @@ func testBadFieldHelper(t *testing.T, badKey string) {
 	badField := trivialComponent{
 		ComponentName: "component",
 		Data: map[string][]string{
-			badKey: []string{},
+			badKey: {},
 		},
 	}
 

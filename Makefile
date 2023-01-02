@@ -16,7 +16,7 @@ clean:
 	go clean
 
 format:
-	find -name '*.go' | xargs gofmt -w
+	find -name '*.go' | xargs gofmt -w -s
 
 dpl:
 	go build -o ${@}

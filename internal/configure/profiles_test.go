@@ -61,13 +61,13 @@ func TestLoadMultipleProfiles(t *testing.T) {
 
 		expectedModSet := modifierSet{
 			prependValues: map[string][]string{
-				"x": []string{
+				"x": {
 					"a",
 					"b",
 				},
 			},
 			appendValues: map[string][]string{
-				"x": []string{
+				"x": {
 					"y",
 					"z",
 				},
