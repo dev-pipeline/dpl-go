@@ -11,8 +11,12 @@ import (
 )
 
 const (
-	buildToolKey   string = "build.tool"
-	installPathKey string = "build.install_path"
+	defaultInstallMethod string = "default"
+	defaultInstallPath   string = "install"
+
+	buildToolKey     string = "build.tool"
+	installPathKey   string = "build.install_path"
+	installMethodKey string = "build.install_method"
 )
 
 var (
@@ -23,21 +27,16 @@ var (
 
 	builders map[string]MakeBuilder = map[string]MakeBuilder{}
 
-	errAlreadyRegistered      error = fmt.Errorf("builder already registered")
-	errTooManyBuilders        error = fmt.Errorf("multiple builders")
-	errInvalidBuilder         error = fmt.Errorf("invalid builder")
-	errMultipleInstallMethods error = fmt.Errorf("multiple install methods specified")
-	errMultipleInstallPaths   error = fmt.Errorf("multiple install paths specified")
-	errInvalidInstallMethod   error = fmt.Errorf("unknown installation method")
+	errAlreadyRegistered    error = fmt.Errorf("builder already registered")
+	errTooManyBuilders      error = fmt.Errorf("multiple builders")
+	errInvalidBuilder       error = fmt.Errorf("invalid builder")
+	errInvalidInstallMethod error = fmt.Errorf("unknown installation method")
 
 	buildSteps []buildStep = []buildStep{
 		doConfigure,
 		doBuild,
 		doInstall,
 	}
-
-	defaultInstallMethod []string = []string{"default"}
-	defaultInstallPath   []string = []string{"install"}
 
 	installHandlers map[string]installFn = map[string]installFn{
 		"default": defaultInstaller,
@@ -70,17 +69,11 @@ func doBuild(builder Builder, component dpl.Component, config *BuildConfig) erro
 }
 
 func doInstall(builder Builder, component dpl.Component, config *BuildConfig) error {
-	installMethod, err := component.ExpandValue("build.install_method")
+	installMethod, err := dpl.GetSingleComponentValueOrDefault(component, installMethodKey, defaultInstallMethod)
 	if err != nil {
 		return err
 	}
-	if len(installMethod) > 1 {
-		return errMultipleInstallMethods
-	}
-	if len(installMethod) == 0 {
-		installMethod = defaultInstallMethod
-	}
-	installer, found := installHandlers[installMethod[0]]
+	installer, found := installHandlers[installMethod]
 	if !found {
 		return errInvalidInstallMethod
 	}
@@ -88,17 +81,11 @@ func doInstall(builder Builder, component dpl.Component, config *BuildConfig) er
 }
 
 func defaultInstaller(builder Builder, component dpl.Component, config *BuildConfig) error {
-	installPath, err := component.ExpandValue(installPathKey)
+	installPath, err := dpl.GetSingleComponentValueOrDefault(component, installPathKey, defaultInstallPath)
 	if err != nil {
 		return err
 	}
-	if len(installPath) > 1 {
-		return errMultipleInstallPaths
-	}
-	if len(installPath) == 0 {
-		installPath = defaultInstallPath
-	}
-	return builder.Install(path.Join(component.GetWorkDir(), installPath[0]))
+	return builder.Install(path.Join(component.GetWorkDir(), installPath))
 }
 
 func noneInstaller(Builder, dpl.Component, *BuildConfig) error {
