@@ -274,6 +274,35 @@ func TestRecursiveExpand(t *testing.T) {
 	}
 }
 
+func TestExpandEmpty(t *testing.T) {
+	project, err := loadRawConfig(
+		[]byte(`
+			[foo]
+			a = ${b}
+			b = hello
+			b = <empty>
+		`),
+	)
+
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	foo, _ := project.GetComponent("foo")
+	expandedValues, err := foo.ExpandValue("a")
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	if len(expandedValues) != 2 {
+		t.Fatalf("Unexpected number of expanded values: %v", len(expandedValues))
+	}
+	if expandedValues[0] != "hello" {
+		t.Fatalf("Unexpected result: %v", expandedValues[0])
+	}
+	if expandedValues[1] != "" {
+		t.Fatalf("Unexpected result: %v", expandedValues[1])
+	}
+}
+
 func TestExpandLimit(t *testing.T) {
 	project, err := loadRawConfig(
 		[]byte(`
