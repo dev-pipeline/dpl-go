@@ -2,8 +2,7 @@ dpl-go
 ======
 |codacy|
 |code-climate|
-|lgtm|
-|lgtm-quality|
+|go-report-card|
 
 This is a rewrite of `dev-pipeline`_ in golang.  The python code evolved
 from a quick and dirty scripts for my own use into a project that I as
@@ -25,7 +24,6 @@ at the moment.
 .. |code-climate| image:: https://api.codeclimate.com/v1/badges/8bf6a4d29669138fc13a/maintainability
     :target: https://codeclimate.com/github/dev-pipeline/dpl-go/maintainability
     :alt: Maintainability
-.. |lgtm| image:: https://img.shields.io/lgtm/alerts/g/dev-pipeline/dpl-go.svg?logo=lgtm&logoWidth=18
-    :target: https://lgtm.com/projects/g/dev-pipeline/dpl-go/alerts/
-.. |lgtm-quality| image:: https://img.shields.io/lgtm/grade/go/g/dev-pipeline/dpl-go.svg?logo=lgtm&logoWidth=18
-    :target: https://lgtm.com/projects/g/dev-pipeline/dpl-go/context:go
+.. |go-report-card| image:: https://goreportcard.com/badge/github.com/dev-pipeline/dpl-go
+    :target: https://goreportcard.com/report/github.com/dev-pipeline/dpl-go
+    :alt: Go Report Card
