@@ -14,19 +14,21 @@ type ScmInfo struct {
 }
 
 type ScmHandler interface {
-	Checkout(ScmInfo, dpl.Component) error
+	Checkout(ScmInfo) error
 }
 
+type MakeScm func(dpl.Component) (ScmHandler, error)
+
 var (
-	scms map[string]ScmHandler = map[string]ScmHandler{}
+	scms map[string]MakeScm = map[string]MakeScm{}
 )
 
-func AddHandler(protocol string, handler ScmHandler) error {
+func AddHandler(protocol string, handler MakeScm) error {
 	scms[protocol] = handler
 	return nil
 }
 
-func GetHandler(protocol string) ScmHandler {
+func GetHandler(protocol string) MakeScm {
 	handler, found := scms[protocol]
 	if found {
 		return handler

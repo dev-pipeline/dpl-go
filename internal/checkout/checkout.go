@@ -26,11 +26,15 @@ func checkout(component dpl.Component) error {
 		if err != nil {
 			return err
 		}
-		handler := scm.GetHandler(scmInfo.Scheme)
-		if handler == nil {
+		scmBuilder := scm.GetHandler(scmInfo.Scheme)
+		if scmBuilder == nil {
 			return fmt.Errorf("no handler for %v", scmInfo.Scheme)
 		}
-		err = handler.Checkout(scmInfo, component)
+		handler, err := scmBuilder(component)
+		if err != nil {
+			return err
+		}
+		err = handler.Checkout(scmInfo)
 		if err != nil {
 			return err
 		}
