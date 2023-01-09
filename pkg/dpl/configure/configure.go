@@ -11,7 +11,7 @@ import (
 	"github.com/dev-pipeline/dpl-go/pkg/dpl"
 )
 
-type Flags struct {
+type ConfigureFlags struct {
 	BuildDir         string
 	BuildDirBasename string
 	ConfigFile       string
@@ -33,7 +33,7 @@ var (
 	errCouldntLoadComponent error = fmt.Errorf("couldn't load component")
 )
 
-func (f Flags) getBuildDir() string {
+func (f ConfigureFlags) getBuildDir() string {
 	if len(f.BuildDir) > 0 {
 		return f.BuildDir
 	}
@@ -43,7 +43,7 @@ func (f Flags) getBuildDir() string {
 	return f.BuildDirBasename
 }
 
-func getCachePath(f Flags) (string, string) {
+func getCachePath(f ConfigureFlags) (string, string) {
 	buildDir := f.getBuildDir()
 	cacheDir := path.Join(buildDir, cacheDirName)
 	cacheFile := path.Join(cacheDir, cacheFileName)
@@ -51,7 +51,7 @@ func getCachePath(f Flags) (string, string) {
 	return cacheDir, cacheFile
 }
 
-func DoConfigure(flags Flags, args []string) {
+func DoConfigure(flags ConfigureFlags, args []string) {
 	project, err := loadConfig(flags.ConfigFile)
 	if err != nil {
 		log.Fatalf("Error: %v", err)
@@ -130,6 +130,15 @@ func DoConfigure(flags Flags, args []string) {
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
+}
+
+type ReconfigureFlags struct {
+	Append    bool
+	Overrides []string
+	Profiles  []string
+}
+
+func DoReconfigure(flags ReconfigureFlags, args []string) {
 }
 
 func loadExistingProject(cacheDir string) (dpl.Project, error) {

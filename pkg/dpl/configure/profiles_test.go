@@ -43,6 +43,7 @@ func buildConfigPath(testFunc func(string), chunks ...string) {
 		"..",
 		"..",
 		"..",
+		"..",
 		"test_files",
 	}, chunks...)
 	dataDir := path.Join(fullArgs...)
