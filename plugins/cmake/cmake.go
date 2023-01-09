@@ -7,8 +7,8 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/dev-pipeline/dpl-go/internal/build"
 	"github.com/dev-pipeline/dpl-go/pkg/dpl"
+	"github.com/dev-pipeline/dpl-go/pkg/dpl/build"
 )
 
 type cmakeBuilder struct {

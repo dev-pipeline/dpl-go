@@ -1,9 +1,10 @@
-package cmd
+package scm
 
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/dev-pipeline/dpl-go/internal/checkout"
+	"github.com/dev-pipeline/dpl-go/cmd"
+	icmd "github.com/dev-pipeline/dpl-go/internal/cmd"
 	"github.com/dev-pipeline/dpl-go/internal/common"
 )
 
@@ -19,11 +20,11 @@ var (
 
 func doCheckout(cmd *cobra.Command, components []string) {
 	common.DoCommand(components, args, []common.Task{
-		checkout.Task,
+		CheckoutTask,
 	})
 }
 
 func init() {
-	addCommonArgs(checkoutCmd, &args)
-	rootCmd.AddCommand(checkoutCmd)
+	icmd.AddCommonArgs(checkoutCmd, &args)
+	cmd.AddCommand(checkoutCmd)
 }

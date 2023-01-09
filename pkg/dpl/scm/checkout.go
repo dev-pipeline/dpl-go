@@ -1,16 +1,15 @@
-package checkout
+package scm
 
 import (
 	"fmt"
 
 	"github.com/dev-pipeline/dpl-go/pkg/dpl"
-	"github.com/dev-pipeline/dpl-go/pkg/dpl/scm"
 
 	"github.com/dev-pipeline/dpl-go/internal/common"
 )
 
 var (
-	Task = common.Task{
+	CheckoutTask = common.Task{
 		Name: "scm",
 		Work: checkout,
 	}
@@ -22,11 +21,11 @@ func checkout(component dpl.Component) error {
 		return err
 	}
 	for _, uri := range scmUris {
-		scmInfo, err := scm.BuildScmInfo(uri)
+		scmInfo, err := BuildScmInfo(uri)
 		if err != nil {
 			return err
 		}
-		scmBuilder := scm.GetHandler(scmInfo.Scheme)
+		scmBuilder := GetHandler(scmInfo.Scheme)
 		if scmBuilder == nil {
 			return fmt.Errorf("no handler for %v", scmInfo.Scheme)
 		}

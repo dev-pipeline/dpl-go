@@ -1,9 +1,10 @@
-package cmd
+package build
 
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/dev-pipeline/dpl-go/internal/build"
+	"github.com/dev-pipeline/dpl-go/cmd"
+	icmd "github.com/dev-pipeline/dpl-go/internal/cmd"
 	"github.com/dev-pipeline/dpl-go/internal/common"
 )
 
@@ -13,17 +14,17 @@ var (
 	buildCmd = &cobra.Command{
 		Use:   "build",
 		Short: "Build a dpl project",
-		Run:   doBuild,
+		Run:   doBuildCmd,
 	}
 )
 
-func doBuild(cmd *cobra.Command, args []string) {
+func doBuildCmd(cmd *cobra.Command, args []string) {
 	common.DoCommand(args, buildCommon, []common.Task{
-		build.BuildTask,
+		BuildTask,
 	})
 }
 
 func init() {
-	addCommonArgs(buildCmd, &buildCommon)
-	rootCmd.AddCommand(buildCmd)
+	icmd.AddCommonArgs(buildCmd, &buildCommon)
+	cmd.AddCommand(buildCmd)
 }

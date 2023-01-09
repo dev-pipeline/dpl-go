@@ -20,6 +20,6 @@ func doBootstrap(cmd *cobra.Command, args []string) {
 }
 
 func init() {
-	addCommonArgs(bootstrapCmd, &bootstrapCommon)
+	AddCommonArgs(bootstrapCmd, &bootstrapCommon)
 	rootCmd.AddCommand(bootstrapCmd)
 }

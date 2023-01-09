@@ -20,3 +20,8 @@ func Execute() {
 		os.Exit(1)
 	}
 }
+
+func AddCommand(command *cobra.Command) error {
+	rootCmd.AddCommand(command)
+	return nil
+}

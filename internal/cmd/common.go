@@ -6,7 +6,7 @@ import (
 	"github.com/dev-pipeline/dpl-go/internal/common"
 )
 
-func addCommonArgs(command *cobra.Command, args *common.Args) {
+func AddCommonArgs(command *cobra.Command, args *common.Args) {
 	command.PersistentFlags().BoolVar(&args.KeepGoing, "keep-going", false,
 		"Continue performing work even if a task fails")
 	command.PersistentFlags().StringVar(&args.Executor, "executor", "",
