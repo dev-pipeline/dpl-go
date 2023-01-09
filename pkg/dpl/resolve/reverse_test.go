@@ -3,7 +3,7 @@ package resolve
 import (
 	"testing"
 
-	"github.com/dev-pipeline/dpl-go/test/common"
+	"github.com/dev-pipeline/dpl-go/internal/test/common"
 )
 
 func TestSingleComponentReverse(t *testing.T) {

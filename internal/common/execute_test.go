@@ -4,9 +4,9 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/dev-pipeline/dpl-go/internal/test/common"
 	"github.com/dev-pipeline/dpl-go/pkg/dpl"
 	"github.com/dev-pipeline/dpl-go/pkg/dpl/resolve"
-	"github.com/dev-pipeline/dpl-go/test/common"
 )
 
 var (
