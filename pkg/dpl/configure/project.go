@@ -80,7 +80,14 @@ func (ic *IniComponent) expandRecursively(value string, count int) ([]string, er
 		}
 	}
 	if !iniComponent.config.HasKey(key) {
-		return nil, errMissingKey
+		if iniComponent != ic {
+			return nil, errMissingKey
+		}
+		defaultComponent, err := iniComponent.project.getDefaultComponent()
+		if err != nil || !defaultComponent.config.HasKey(key) {
+			return nil, errMissingKey
+		}
+		iniComponent = defaultComponent
 	}
 	expanded, err := iniComponent.expandValueInternal(key, count+1)
 	if err != nil {
@@ -149,7 +156,7 @@ type IniProject struct {
 	dirty      bool
 }
 
-func (ip *IniProject) getDefaultComponent() (dpl.Component, error) {
+func (ip *IniProject) getDefaultComponent() (*IniComponent, error) {
 	section, err := ip.config.GetSection(ini.DefaultSection)
 	if err != nil {
 		return nil, err
