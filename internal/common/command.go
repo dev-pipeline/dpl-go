@@ -2,7 +2,6 @@ package common
 
 import (
 	"log"
-	"os"
 	"strings"
 	"sync"
 
@@ -202,7 +201,7 @@ func DoCommand(components []string, args Args, tasks []Task) {
 		err := runTasks(project, components, tasks, resolveFn, args.KeepGoing)
 		project.Write()
 		if err != nil {
-			os.Exit(1)
+			log.Fatalf("Error: %v", err)
 		}
 	}
 }

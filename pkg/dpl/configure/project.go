@@ -16,7 +16,8 @@ import (
 )
 
 var (
-	expandedPattern *regexp.Regexp
+	expandedPattern     *regexp.Regexp
+	reservedNamePattern *regexp.Regexp
 
 	errCantFindComponent error = errors.New("couldn't find component")
 	errMissingKey        error = errors.New("missing key")
@@ -194,7 +195,14 @@ func (ip *IniProject) GetComponent(name string) (dpl.Component, bool) {
 }
 
 func (ip *IniProject) Components() []string {
-	return ip.config.SectionStrings()[1:]
+	ret := []string{}
+	rawNames := ip.config.SectionStrings()[1:]
+	for i := range rawNames {
+		if !reservedNamePattern.MatchString(rawNames[i]) {
+			ret = append(ret, rawNames[i])
+		}
+	}
+	return ret
 }
 
 func (ip *IniProject) Write() error {
@@ -217,6 +225,10 @@ func (ip *IniProject) write(writer io.Writer) error {
 func init() {
 	var err error
 	expandedPattern, err = regexp.Compile(`(^|[^\\])(?:\${(?:([a-z_\-]+):)?((?:[a-zA-Z0-9_]+\.)*[a-zA-Z0-9)_]+)})`)
+	if err != nil {
+		log.Fatalf("Error compiling pattern: %v", err)
+	}
+	reservedNamePattern, err = regexp.Compile(`^dpl\..+`)
 	if err != nil {
 		log.Fatalf("Error compiling pattern: %v", err)
 	}
