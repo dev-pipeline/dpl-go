@@ -31,6 +31,7 @@ var (
 	errMissingSourceDir     error = fmt.Errorf("project missing source directory information")
 	errMissingWorkDir       error = fmt.Errorf("project missing work directory information")
 	errCouldntLoadComponent error = fmt.Errorf("couldn't load component")
+	errNoDefaultComponent   error = fmt.Errorf("no default component")
 )
 
 func (f ConfigureFlags) getBuildDir() string {
@@ -56,16 +57,29 @@ func DoConfigure(flags ConfigureFlags, args []string) {
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
-	err = validateProject(project)
-	if err != nil {
-		log.Fatalf("Error: %v", err)
-	}
 
 	sourceFileAbsPath, err := filepath.Abs(flags.ConfigFile)
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
 	sourceDirAbsPath := path.Dir(sourceFileAbsPath)
+	controlData, err := getControlData(project, sourceDirAbsPath)
+	if err != nil {
+		log.Fatalf("Error: %v", err)
+	}
+
+	for i := range controlData.subfiles {
+		err = project.config.Append(controlData.subfiles[i])
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+	}
+	project.config.DeleteSection(controlSectionName)
+
+	err = validateProject(project)
+	if err != nil {
+		log.Fatalf("Error: %v", err)
+	}
 
 	homedir, err := os.UserHomeDir()
 	if err != nil {
@@ -86,9 +100,9 @@ func DoConfigure(flags ConfigureFlags, args []string) {
 		log.Fatalf("Error: %v", err)
 	}
 
-	defaultComponent, err := project.getDefaultComponent()
-	if err != nil {
-		log.Fatalf("Error: %v", err)
+	defaultComponent, found := project.getDefaultComponent()
+	if !found {
+		log.Fatalf("Error: failed to get default component")
 	}
 	defaultComponent.SetValue("dpl.profiles", flags.Profiles)
 	defaultComponent.SetValue("dpl.overrides", flags.Overrides)
@@ -115,6 +129,10 @@ func DoConfigure(flags ConfigureFlags, args []string) {
 		}
 		component.SetValue("dpl.source_dir", []string{path.Join(sourceDirAbsPath, component.Name())})
 		component.SetValue("dpl.work_dir", []string{path.Join(workDirAbsPath, component.Name())})
+	}
+	err = applyControlData(project, controlData)
+	if err != nil {
+		log.Fatalf("Error: %v", err)
 	}
 
 	outConfig, err := os.Create(cacheFile)
@@ -148,9 +166,9 @@ func loadExistingProject(cacheDir string) (dpl.Project, error) {
 		return nil, err
 	}
 
-	defaultComponent, err := project.getDefaultComponent()
-	if err != nil {
-		return nil, err
+	defaultComponent, found := project.getDefaultComponent()
+	if !found {
+		return nil, errNoDefaultComponent
 	}
 	srcDir := defaultComponent.GetValue("dpl.src_dir")
 	if len(srcDir) != 1 {

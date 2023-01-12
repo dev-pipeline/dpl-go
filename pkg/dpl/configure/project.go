@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"strings"
 
 	"gopkg.in/ini.v1"
 
@@ -83,8 +84,8 @@ func (ic *IniComponent) expandRecursively(value string, count int) ([]string, er
 		if iniComponent != ic {
 			return nil, errMissingKey
 		}
-		defaultComponent, err := iniComponent.project.getDefaultComponent()
-		if err != nil || !defaultComponent.config.HasKey(key) {
+		defaultComponent, found := iniComponent.project.getDefaultComponent()
+		if !found || !defaultComponent.config.HasKey(key) {
 			return nil, errMissingKey
 		}
 		iniComponent = defaultComponent
@@ -156,19 +157,26 @@ type IniProject struct {
 	dirty      bool
 }
 
-func (ip *IniProject) getDefaultComponent() (*IniComponent, error) {
-	section, err := ip.config.GetSection(ini.DefaultSection)
+func (ip *IniProject) getAnyComponent(name string) (*IniComponent, bool) {
+	section, err := ip.config.GetSection(name)
 	if err != nil {
-		return nil, err
+		return nil, false
 	}
 	return &IniComponent{
 		config:  section,
 		project: ip,
-	}, nil
+	}, true
+}
+
+func (ip *IniProject) getDefaultComponent() (*IniComponent, bool) {
+	return ip.getAnyComponent(ini.DefaultSection)
 }
 
 func (ip *IniProject) getConfigComponent(name string) (*IniComponent, bool) {
 	if name == ini.DefaultSection {
+		return nil, false
+	}
+	if strings.HasPrefix(name, "dpl.") {
 		return nil, false
 	}
 	component, err := ip.config.GetSection(name)
