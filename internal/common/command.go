@@ -13,6 +13,7 @@ type Args struct {
 	KeepGoing    bool
 	Executor     string
 	Dependencies string
+	MaxTasks     int
 }
 
 type TaskFn func(dpl.Component) error
@@ -33,24 +34,19 @@ type taskComplete struct {
 	err  error
 }
 
-func executeTasks(wg *sync.WaitGroup, taskChannel chan work, doneChannel chan taskComplete) error {
-	wg.Add(1)
-	go func() {
-		for {
-			workUnit := <-taskChannel
-			if len(workUnit.name) == 0 {
-				wg.Done()
-				return
-			}
-			err := workUnit.fn(workUnit.component)
-			doneChannel <- taskComplete{
-				name: workUnit.name,
-				err:  err,
-			}
+func executeTasks(taskChannel chan work, doneChannel chan taskComplete) {
+	for {
+		workUnit, ok := <-taskChannel
+		if !ok {
+			return
 		}
-	}()
-
-	return nil
+		log.Printf("Executing %v", workUnit.name)
+		err := workUnit.fn(workUnit.component)
+		doneChannel <- taskComplete{
+			name: workUnit.name,
+			err:  err,
+		}
+	}
 }
 
 func makeTaskContainers(tasks []Task) ([]string, map[string]TaskFn, error) {
@@ -70,12 +66,11 @@ type taskCompleteFn func(taskComplete)
 func startDrainComplete(doneChannel chan taskComplete, completeFn taskCompleteFn) {
 	go func() {
 		for {
-			completedTask := <-doneChannel
-			if len(completedTask.name) != 0 {
-				completeFn(completedTask)
-			} else {
+			completedTask, ok := <-doneChannel
+			if !ok {
 				return
 			}
+			completeFn(completedTask)
 		}
 	}()
 }
@@ -125,7 +120,7 @@ func (ft *failedTask) Error() string {
 	return ""
 }
 
-func runTasks(project dpl.Project, components []string, tasks []Task, resolveFn resolve.ResolveFn, keepGoing bool) error {
+func runTasks(project dpl.Project, components []string, tasks []Task, resolveFn resolve.ResolveFn, keepGoing bool, maxTasks int) error {
 	taskList, taskMap, err := makeTaskContainers(tasks)
 	if err != nil {
 		return err
@@ -145,9 +140,12 @@ func runTasks(project dpl.Project, components []string, tasks []Task, resolveFn 
 	defer close(doneChannel)
 	wg := sync.WaitGroup{}
 
-	err = executeTasks(&wg, workChannel, doneChannel)
-	if err != nil {
-		return err
+	for i := 0; i < maxTasks; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			executeTasks(workChannel, doneChannel)
+		}()
 	}
 
 	errors := []error{}
@@ -198,7 +196,7 @@ func DoCommand(components []string, args Args, tasks []Task) {
 	if resolveFn == nil {
 		log.Fatalf("No resolver '%v'", args.Dependencies)
 	} else {
-		err := runTasks(project, components, tasks, resolveFn, args.KeepGoing)
+		err := runTasks(project, components, tasks, resolveFn, args.KeepGoing, args.MaxTasks)
 		project.Write()
 		if err != nil {
 			log.Fatalf("Error: %v", err)

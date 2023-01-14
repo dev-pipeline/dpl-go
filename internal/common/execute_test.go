@@ -67,7 +67,7 @@ func TestCleanRun(t *testing.T) {
 		},
 	}
 
-	err := runTasks(diamondProject, []string{"foo", "bar", "baz", "biz"}, tasks, resolveFn, false)
+	err := runTasks(diamondProject, []string{"foo", "bar", "baz", "biz"}, tasks, resolveFn, false, 1)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
@@ -89,7 +89,7 @@ func TestErrorRun(t *testing.T) {
 		},
 	}
 
-	err := runTasks(diamondProject, []string{"foo", "bar", "baz", "biz"}, tasks, resolveFn, false)
+	err := runTasks(diamondProject, []string{"foo", "bar", "baz", "biz"}, tasks, resolveFn, false, 1)
 	if err == nil {
 		t.Fatalf("Missing expected error")
 	}
@@ -115,7 +115,7 @@ func TestRecoverError(t *testing.T) {
 		},
 	}
 
-	err := runTasks(parallelProject, []string{"foo", "bar", "baz", "biz"}, tasks, resolveFn, true)
+	err := runTasks(parallelProject, []string{"foo", "bar", "baz", "biz"}, tasks, resolveFn, true, 4)
 	if err == nil {
 		t.Fatalf("Missing expected error")
 	}
