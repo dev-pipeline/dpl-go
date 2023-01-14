@@ -31,7 +31,7 @@ var (
 	errMissingSourceDir     error = fmt.Errorf("project missing source directory information")
 	errMissingWorkDir       error = fmt.Errorf("project missing work directory information")
 	errCouldntLoadComponent error = fmt.Errorf("couldn't load component")
-	errNoDefaultComponent   error = fmt.Errorf("no default component")
+	errNoControlData        error = fmt.Errorf("no control data")
 )
 
 func (f ConfigureFlags) getBuildDir() string {
@@ -99,13 +99,9 @@ func DoConfigure(flags ConfigureFlags, args []string) {
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
-
-	defaultComponent, found := project.getDefaultComponent()
-	if !found {
-		log.Fatalf("Error: failed to get default component")
-	}
-	defaultComponent.SetValue("dpl.profiles", flags.Profiles)
-	defaultComponent.SetValue("dpl.overrides", flags.Overrides)
+	controlData.fields[profilesKey] = flags.Profiles
+	controlData.fields[overridesKey] = flags.Overrides
+	controlData.fields[buildConfigKey] = []string{sourceFileAbsPath}
 
 	cacheDir, cacheFile := getCachePath(flags)
 	err = os.MkdirAll(cacheDir, 0755)
@@ -117,9 +113,8 @@ func DoConfigure(flags ConfigureFlags, args []string) {
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
-	defaultComponent.SetValue("dpl.build_config", []string{sourceFileAbsPath})
-	defaultComponent.SetValue("dpl.src_dir", []string{sourceDirAbsPath})
-	defaultComponent.SetValue("dpl.work_dir", []string{workDirAbsPath})
+	controlData.fields[sourceDirKey] = []string{sourceDirAbsPath}
+	controlData.fields[workDirKey] = []string{workDirAbsPath}
 
 	components := project.Components()
 	for i := range components {
@@ -127,8 +122,8 @@ func DoConfigure(flags ConfigureFlags, args []string) {
 		if !found {
 			log.Fatalf("Error: %v", errCouldntLoadComponent)
 		}
-		component.SetValue("dpl.source_dir", []string{path.Join(sourceDirAbsPath, component.Name())})
-		component.SetValue("dpl.work_dir", []string{path.Join(workDirAbsPath, component.Name())})
+		component.SetValue(sourceDirKey, []string{path.Join(sourceDirAbsPath, component.Name())})
+		component.SetValue(workDirKey, []string{path.Join(workDirAbsPath, component.Name())})
 	}
 	err = applyControlData(project, controlData)
 	if err != nil {
@@ -166,16 +161,16 @@ func loadExistingProject(cacheDir string) (dpl.Project, error) {
 		return nil, err
 	}
 
-	defaultComponent, found := project.getDefaultComponent()
+	controlComponent, found := project.getAnyComponent(controlSectionName)
 	if !found {
-		return nil, errNoDefaultComponent
+		return nil, errNoControlData
 	}
-	srcDir := defaultComponent.GetValue("dpl.src_dir")
+	srcDir := controlComponent.GetValue(sourceDirKey)
 	if len(srcDir) != 1 {
 		return nil, errMissingSourceDir
 	}
 	project.srcDir = srcDir[0]
-	workDir := defaultComponent.GetValue("dpl.work_dir")
+	workDir := controlComponent.GetValue(workDirKey)
 	if len(workDir) != 1 {
 		return nil, errMissingWorkDir
 	}

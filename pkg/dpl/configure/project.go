@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"path"
 	"regexp"
 	"strings"
 
@@ -143,11 +142,19 @@ func (ic *IniComponent) EraseValue(name string) {
 }
 
 func (ic *IniComponent) GetSourceDir() string {
-	return path.Join(ic.project.srcDir, ic.Name())
+	srcDir, err := dpl.GetSingleComponentValue(ic, sourceDirKey)
+	if err != nil {
+		log.Fatalf("Error getting %v's source dir: %v", ic.Name(), err)
+	}
+	return srcDir
 }
 
 func (ic *IniComponent) GetWorkDir() string {
-	return path.Join(ic.project.workDir, ic.Name())
+	workDir, err := dpl.GetSingleComponentValue(ic, workDirKey)
+	if err != nil {
+		log.Fatalf("Error getting %v's work dir: %v", ic.Name(), err)
+	}
+	return workDir
 }
 
 type IniProject struct {
