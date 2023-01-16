@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"strings"
 
 	"github.com/dev-pipeline/dpl-go/pkg/dpl"
 	"github.com/dev-pipeline/dpl-go/pkg/dpl/build"
@@ -40,12 +39,20 @@ func (cb cmakeBuilder) Configure(config *build.BuildConfig) error {
 		return err
 	}
 	args := []string{}
-	modulePath, err := cb.component.ExpandValue("cmake.module_path")
-	if err != nil {
-		return err
-	}
-	if len(modulePath) > 1 {
-		args = append(args, fmt.Sprintf("-DCMAKE_MODULE_PATH=%v", strings.Join(modulePath, ";")))
+	keys := cb.component.ValueNames()
+	for i := range keys {
+		fn, found := flagHandlers[keys[i]]
+		if found {
+			values, err := cb.component.ExpandValue(keys[i])
+			if err != nil {
+				return err
+			}
+			flags, err := fn(keys[i], values)
+			if err != nil {
+				return err
+			}
+			args = append(args, flags...)
+		}
 	}
 	return cb.runCmake(cmakeFlags{
 		args: append(args, cb.component.GetSourceDir()),
