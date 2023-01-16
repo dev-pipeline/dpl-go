@@ -63,6 +63,9 @@ func DoConfigure(flags ConfigureFlags, args []string) {
 		log.Fatalf("Error: %v", err)
 	}
 	sourceDirAbsPath := path.Dir(sourceFileAbsPath)
+	if len(flags.RootDir) != 0 {
+		sourceDirAbsPath = flags.RootDir
+	}
 	controlData, err := getControlData(project, sourceDirAbsPath)
 	if err != nil {
 		log.Fatalf("Error: %v", err)

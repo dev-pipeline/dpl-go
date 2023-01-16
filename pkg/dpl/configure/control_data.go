@@ -23,21 +23,22 @@ type controlData struct {
 }
 
 func getControlData(project *IniProject, sourceDirAbsPath string) (controlData, error) {
+	ret := controlData{
+		fields: map[string][]string{},
+	}
 	controlSection, found := project.getAnyComponent(controlSectionName)
 	if !found {
-		return controlData{}, nil
+		return ret, nil
 	}
 	subfiles, err := controlSection.ExpandValue(subfilesKey)
 	if err != nil {
-		return controlData{}, err
+		return ret, err
 	}
 	for i := range subfiles {
 		subfiles[i] = path.Join(sourceDirAbsPath, subfiles[i])
 	}
-	return controlData{
-		subfiles: subfiles,
-		fields:   map[string][]string{},
-	}, nil
+	ret.subfiles = subfiles
+	return ret, nil
 }
 
 func applyControlData(project *IniProject, cd controlData) error {
