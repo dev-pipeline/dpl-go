@@ -28,10 +28,7 @@ const (
 )
 
 var (
-	errMissingSourceDir     error = fmt.Errorf("project missing source directory information")
-	errMissingWorkDir       error = fmt.Errorf("project missing work directory information")
-	errCouldntLoadComponent error = fmt.Errorf("couldn't load component")
-	errNoControlData        error = fmt.Errorf("no control data")
+	errNoControlData error = fmt.Errorf("no control data")
 )
 
 func (f ConfigureFlags) getBuildDir() string {
@@ -52,55 +49,55 @@ func getCachePath(f ConfigureFlags) (string, string) {
 	return cacheDir, cacheFile
 }
 
-func DoConfigure(flags ConfigureFlags, args []string) {
+func configureFromScratch(flags ConfigureFlags) (*IniProject, error) {
 	project, err := loadConfig(flags.ConfigFile)
 	if err != nil {
-		log.Fatalf("Error: %v", err)
+		return nil, err
 	}
 
 	sourceFileAbsPath, err := filepath.Abs(flags.ConfigFile)
 	if err != nil {
-		log.Fatalf("Error: %v", err)
+		return nil, err
 	}
 	sourceDirAbsPath := path.Dir(sourceFileAbsPath)
+	controlData, err := getControlData(project, sourceDirAbsPath)
 	if len(flags.RootDir) != 0 {
 		sourceDirAbsPath = flags.RootDir
 	}
-	controlData, err := getControlData(project, sourceDirAbsPath)
 	if err != nil {
-		log.Fatalf("Error: %v", err)
+		return nil, err
 	}
 
 	for i := range controlData.subfiles {
 		err = project.config.Append(controlData.subfiles[i])
 		if err != nil {
-			log.Fatalf("Error: %v", err)
+			return nil, err
 		}
 	}
 	project.config.DeleteSection(controlSectionName)
 
 	err = validateProject(project)
 	if err != nil {
-		log.Fatalf("Error: %v", err)
+		return nil, err
 	}
 
 	homedir, err := os.UserHomeDir()
 	if err != nil {
-		log.Fatalf("Error: %v", err)
+		return nil, err
 	}
 	dplConfigDir := path.Join(homedir, ".dev-pipeline")
 
 	modSet, err := loadProfiles(dplConfigDir, flags.Profiles)
 	if err != nil {
-		log.Fatalf("Error: %v", err)
+		return nil, err
 	}
 	err = applyProfiles(modSet, project)
 	if err != nil {
-		log.Fatalf("Error: %v", err)
+		return nil, err
 	}
 	err = applyOverrides(dplConfigDir, flags.Profiles, project)
 	if err != nil {
-		log.Fatalf("Error: %v", err)
+		return nil, err
 	}
 	controlData.fields[profilesKey] = flags.Profiles
 	controlData.fields[overridesKey] = flags.Overrides
@@ -109,12 +106,12 @@ func DoConfigure(flags ConfigureFlags, args []string) {
 	cacheDir, cacheFile := getCachePath(flags)
 	err = os.MkdirAll(cacheDir, 0755)
 	if err != nil {
-		log.Fatalf("Error: %v", err)
+		return nil, err
 	}
 
 	workDirAbsPath, err := filepath.Abs(flags.getBuildDir())
 	if err != nil {
-		log.Fatalf("Error: %v", err)
+		return nil, err
 	}
 	controlData.fields[sourceDirKey] = []string{sourceDirAbsPath}
 	controlData.fields[workDirKey] = []string{workDirAbsPath}
@@ -123,28 +120,36 @@ func DoConfigure(flags ConfigureFlags, args []string) {
 	for i := range components {
 		component, found := project.GetComponent(components[i])
 		if !found {
-			log.Fatalf("Error: %v", errCouldntLoadComponent)
+			return nil, err
 		}
 		component.SetValue(sourceDirKey, []string{path.Join(sourceDirAbsPath, component.Name())})
 		component.SetValue(workDirKey, []string{path.Join(workDirAbsPath, component.Name())})
 	}
 	err = applyControlData(project, controlData)
 	if err != nil {
-		log.Fatalf("Error: %v", err)
+		return nil, err
 	}
 
 	outConfig, err := os.Create(cacheFile)
 	if err != nil {
-		log.Fatalf("Error: %v", err)
+		return nil, err
 	}
 	defer outConfig.Close()
 	err = project.write(outConfig)
 	if err != nil {
-		log.Fatalf("Error: %v", err)
+		return nil, err
 	}
 	err = dpl.WriteProject(cacheDir, loaderString)
 	if err != nil {
-		log.Fatalf("Error: %v", err)
+		return nil, err
+	}
+	return project, nil
+}
+
+func DoConfigure(flags ConfigureFlags, args []string) {
+	_, err := configureFromScratch(flags)
+	if err != nil {
+		log.Fatalf("Error configuring project: %v", err)
 	}
 }
 
@@ -164,20 +169,26 @@ func loadExistingProject(cacheDir string) (dpl.Project, error) {
 		return nil, err
 	}
 
+	info, err := os.Stat(configPath)
+	if err != nil {
+		return nil, err
+	}
+
 	controlComponent, found := project.getAnyComponent(controlSectionName)
 	if !found {
 		return nil, errNoControlData
 	}
-	srcDir := controlComponent.GetValue(sourceDirKey)
-	if len(srcDir) != 1 {
-		return nil, errMissingSourceDir
+	config, err := projectUpToDate(info.ModTime(), controlComponent)
+	if err != nil {
+		if err != errProjectOutOfDate {
+			return nil, err
+		}
+		project, err = configureFromScratch(config)
+		if err != nil {
+			return nil, err
+		}
+		project.configFile = configPath
 	}
-	project.srcDir = srcDir[0]
-	workDir := controlComponent.GetValue(workDirKey)
-	if len(workDir) != 1 {
-		return nil, errMissingWorkDir
-	}
-	project.workDir = workDir[0]
 	return project, err
 }
 

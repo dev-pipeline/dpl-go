@@ -159,8 +159,6 @@ func (ic *IniComponent) GetWorkDir() string {
 
 type IniProject struct {
 	config     *ini.File
-	workDir    string
-	srcDir     string
 	configFile string
 	dirty      bool
 }
