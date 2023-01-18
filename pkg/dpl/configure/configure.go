@@ -160,6 +160,42 @@ type ReconfigureFlags struct {
 }
 
 func DoReconfigure(flags ReconfigureFlags, args []string) {
+	project, err := dpl.LoadProject()
+	if err != nil {
+		log.Fatalf("Failed to load project: %v", err)
+	}
+	realProject, ok := project.(*IniProject)
+	if !ok {
+		log.Fatalf("Project wasn't created using 'configure'")
+	}
+	controlComponent, found := realProject.getAnyComponent(controlSectionName)
+	if !found {
+		log.Fatalf("Error: %v", errNoControlData)
+	}
+	cf := ConfigureFlags{}
+	err = setupFlags(&cf, controlComponent)
+	if err != nil {
+		log.Fatalf("Error: %v", err)
+	}
+
+	if len(flags.Overrides) != 0 {
+		if flags.Append {
+			cf.Overrides = append(cf.Overrides, flags.Overrides...)
+		} else {
+			cf.Overrides = flags.Overrides
+		}
+	}
+	if len(flags.Profiles) != 0 {
+		if flags.Append {
+			cf.Profiles = append(cf.Profiles, flags.Profiles...)
+		} else {
+			cf.Profiles = flags.Profiles
+		}
+	}
+	project, err = configureFromScratch(cf)
+	if err != nil {
+		log.Fatalf("Error: %v", err)
+	}
 }
 
 func loadExistingProject(cacheDir string) (dpl.Project, error) {
