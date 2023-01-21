@@ -93,15 +93,17 @@ func noneInstaller(Builder, dpl.Component, *BuildConfig) error {
 }
 
 func doFullBuild(component dpl.Component) error {
-	builder := component.GetValue(buildToolKey)
-	if len(builder) != 1 {
-		if len(builder) == 0 {
+	builder, err := dpl.GetSingleComponentValue(component, buildToolKey)
+	if err != nil {
+		if _, ok := err.(*dpl.MissingKeyError); ok {
 			log.Printf("No builder specified for '%v'", component.Name())
 			return nil
+		} else if _, ok := err.(*dpl.TooManyValuesError); ok {
+			return errTooManyBuilders
 		}
-		return errTooManyBuilders
+		return err
 	}
-	builderMaker, found := builders[builder[0]]
+	builderMaker, found := builders[builder]
 	if !found {
 		return errInvalidBuilder
 	}
