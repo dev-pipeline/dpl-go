@@ -52,5 +52,5 @@ func GetSingleComponentValueOrDefault(component Component, key string, fallback 
 	if _, ok := err.(*MissingKeyError); ok {
 		return fallback, nil
 	}
-	return "", nil
+	return "", err
 }

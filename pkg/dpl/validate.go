@@ -45,11 +45,23 @@ func ValidateComponent(component Component) error {
 	return nil
 }
 
+type projectValidationError struct {
+	name string
+	err  error
+}
+
+func (pve *projectValidationError) Error() string {
+	return fmt.Sprintf("%v [%v]", pve.err, pve.name)
+}
+
 func ValidateProject(project Project) error {
 	for name, validator := range projectValidators {
 		err := validator(project)
 		if err != nil {
-			return fmt.Errorf("%v [%v]", err, name)
+			return &projectValidationError{
+				name: name,
+				err:  err,
+			}
 		}
 	}
 	return nil

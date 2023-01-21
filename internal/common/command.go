@@ -49,7 +49,7 @@ func executeTasks(taskChannel chan work, doneChannel chan taskComplete) {
 	}
 }
 
-func makeTaskContainers(tasks []Task) ([]string, map[string]TaskFn, error) {
+func makeTaskContainers(tasks []Task) ([]string, map[string]TaskFn) {
 	taskList := []string{}
 	taskMap := map[string]TaskFn{}
 
@@ -58,7 +58,7 @@ func makeTaskContainers(tasks []Task) ([]string, map[string]TaskFn, error) {
 		taskList = append(taskList, task.Name)
 	}
 
-	return taskList, taskMap, nil
+	return taskList, taskMap
 }
 
 type taskCompleteFn func(taskComplete)
@@ -75,7 +75,7 @@ func startDrainComplete(doneChannel chan taskComplete, completeFn taskCompleteFn
 	}()
 }
 
-func startResolve(project dpl.Project, resolver resolve.Resolver, taskMap map[string]TaskFn) (chan work, error) {
+func startResolve(project dpl.Project, resolver resolve.Resolver, taskMap map[string]TaskFn) chan work {
 	workChannel := make(chan work)
 	go func() {
 		defer close(workChannel)
@@ -107,7 +107,7 @@ func startResolve(project dpl.Project, resolver resolve.Resolver, taskMap map[st
 			readyTasks = <-readyTaskChannel
 		}
 	}()
-	return workChannel, nil
+	return workChannel
 }
 
 type failedTask struct {
@@ -121,21 +121,13 @@ func (ft *failedTask) Error() string {
 }
 
 func runTasks(project dpl.Project, components []string, tasks []Task, resolveFn resolve.ResolveFn, keepGoing bool, maxTasks int) error {
-	taskList, taskMap, err := makeTaskContainers(tasks)
-	if err != nil {
-		return err
-	}
-
+	taskList, taskMap := makeTaskContainers(tasks)
 	resolver, err := resolveFn(project, components, taskList)
 	if err != nil {
 		return err
 	}
 
-	workChannel, err := startResolve(project, resolver, taskMap)
-	if err != nil {
-		return err
-	}
-
+	workChannel := startResolve(project, resolver, taskMap)
 	doneChannel := make(chan taskComplete)
 	defer close(doneChannel)
 	wg := sync.WaitGroup{}

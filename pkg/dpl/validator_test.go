@@ -1,7 +1,12 @@
 package dpl
 
 import (
+	"fmt"
 	"testing"
+)
+
+const (
+	testValidatorName string = "some-test-validator"
 )
 
 func TestRestrictedComponentName(t *testing.T) {
@@ -57,4 +62,44 @@ func TestFieldStartsWithNumber(t *testing.T) {
 
 func TestDplPrefix(t *testing.T) {
 	testBadFieldHelper(t, "dpl.a")
+}
+
+type invalidProject struct {
+}
+
+func (invalidProject) GetComponent(string) (Component, bool) {
+	return nil, false
+}
+
+func (invalidProject) Components() []string {
+	return []string{}
+}
+
+func (invalidProject) Write() error {
+	return nil
+}
+
+func TestInvalidProject(t *testing.T) {
+	p := &invalidProject{}
+	err := ValidateProject(p)
+	if err == nil {
+		t.Fatalf("Missing expected error")
+	}
+	realErr, ok := err.(*projectValidationError)
+	if !ok {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	if realErr.name != testValidatorName {
+		t.Fatalf("Unexpected validator name: %v", realErr.name)
+	}
+}
+
+func init() {
+	RegisterProjectValidator(testValidatorName, func(p Project) error {
+		_, ok := p.(*invalidProject)
+		if ok {
+			return fmt.Errorf("some error")
+		}
+		return nil
+	})
 }

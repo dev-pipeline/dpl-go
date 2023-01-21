@@ -1,6 +1,7 @@
 package dpl
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -90,5 +91,61 @@ func TestSingleExpandWithFallback(t *testing.T) {
 	}
 	if actualValue != fallback {
 		t.Fatalf("Unexpected value: %v (expected: %v)", actualValue, fallback)
+	}
+}
+
+type erroringComponent struct {
+	err error
+}
+
+func (*erroringComponent) Name() string {
+	return ""
+}
+
+func (*erroringComponent) ValueNames() []string {
+	return []string{}
+}
+
+func (*erroringComponent) GetValue(string) []string {
+	return []string{}
+}
+
+func (ec *erroringComponent) ExpandValue(string) ([]string, error) {
+	return nil, ec.err
+}
+
+func (*erroringComponent) SetValue(string, []string) {
+}
+
+func (*erroringComponent) EraseValue(string) {
+}
+
+func (*erroringComponent) GetSourceDir() string {
+	return ""
+}
+
+func (*erroringComponent) GetWorkDir() string {
+	return ""
+}
+
+func TestGetSingleComponentValueErr(t *testing.T) {
+	component := &erroringComponent{
+		err: fmt.Errorf("some error"),
+	}
+
+	_, err := GetSingleComponentValue(component, "some-key")
+	if err != component.err {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+}
+
+func TestGetSingleComponentValueOrDefaultErr(t *testing.T) {
+	component := &erroringComponent{
+		err: fmt.Errorf("some error"),
+	}
+
+	_, err := GetSingleComponentValueOrDefault(component, "some-key", "some-fallback")
+	if err != component.err {
+		t.Fatalf("Unexpected error: %v", err)
 	}
 }
