@@ -2,6 +2,7 @@ package common
 
 import (
 	"errors"
+	"sync/atomic"
 	"testing"
 
 	"github.com/dev-pipeline/dpl-go/internal/test/common"
@@ -99,14 +100,14 @@ func TestErrorRun(t *testing.T) {
 }
 
 func TestRecoverError(t *testing.T) {
-	executeCount := 0
+	executeCount := atomic.Int32{}
 	resolveFn := resolve.GetResolver("deep")
 	tasks := []Task{
 		{
 			Name: "build",
 			Work: func(component dpl.Component) error {
-				executeCount++
-				if executeCount == 1 {
+				previous := executeCount.Add(1)
+				if previous == 1 {
 					// only fail the first one
 					return errors.New("Error")
 				}
@@ -119,7 +120,7 @@ func TestRecoverError(t *testing.T) {
 	if err == nil {
 		t.Fatalf("Missing expected error")
 	}
-	if executeCount != 3 {
+	if executeCount.Load() != 3 {
 		t.Fatalf("Executed too many tasks (%v)", executeCount)
 	}
 }
