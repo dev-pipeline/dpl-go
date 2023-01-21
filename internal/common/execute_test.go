@@ -121,6 +121,6 @@ func TestRecoverError(t *testing.T) {
 		t.Fatalf("Missing expected error")
 	}
 	if executeCount.Load() != 3 {
-		t.Fatalf("Executed too many tasks (%v)", executeCount)
+		t.Fatalf("Executed too many tasks (%v)", executeCount.Load())
 	}
 }
