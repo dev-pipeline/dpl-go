@@ -10,13 +10,23 @@ var (
 	argumentPattern *regexp.Regexp
 )
 
+type extractionError struct {
+	arg string
+}
+
+func (ee extractionError) Error() string {
+	return fmt.Sprintf("couldn't parse '%v'", ee.arg)
+}
+
 func extractArguments(raw string, separator string) (string, map[string]string, error) {
 	chunks := strings.Split(raw, separator)
 	args := map[string]string{}
 	for _, arg := range chunks[1:] {
 		groups := argumentPattern.FindStringSubmatch(arg)
 		if groups == nil {
-			return "", nil, fmt.Errorf("couldn't parse '%v'", arg)
+			return "", nil, &extractionError{
+				arg: arg,
+			}
 		}
 		args[groups[1]] = groups[2]
 	}

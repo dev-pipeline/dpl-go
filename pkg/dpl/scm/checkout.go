@@ -8,6 +8,10 @@ import (
 	"github.com/dev-pipeline/dpl-go/internal/common"
 )
 
+const (
+	scmUriKey string = "scm.uri"
+)
+
 var (
 	CheckoutTask = common.Task{
 		Name: "scm",
@@ -16,7 +20,7 @@ var (
 )
 
 func checkout(component dpl.Component) error {
-	scmUris, err := component.ExpandValue("scm.uri")
+	scmUris, err := component.ExpandValue(scmUriKey)
 	if err != nil {
 		return err
 	}

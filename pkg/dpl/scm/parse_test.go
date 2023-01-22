@@ -49,3 +49,15 @@ func TestParse(t *testing.T) {
 	}
 	compareArgs(t, expectedArguments, scmInfo.Arguments)
 }
+
+func TestBadParse(t *testing.T) {
+	scmUri := "git://git@github.com/foo/bar.git;some-junk-without-a-value"
+
+	_, err := BuildScmInfo(scmUri)
+	if err == nil {
+		t.Fatalf("Missing expected error")
+	}
+	if _, ok := err.(*extractionError); !ok {
+		t.Fatalf("Unexpected error type: %T", err)
+	}
+}
