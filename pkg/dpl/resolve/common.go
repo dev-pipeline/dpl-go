@@ -134,14 +134,15 @@ func addDeps(project dpl.Project, target string, tasks []string, reverseDeps rev
 		firstTime := insertKey(componentTask, reverseDeps)
 
 		if firstTime {
-			component, found := project.GetComponent(target)
-			if !found {
+			component, err := project.GetComponent(target)
+			if err != nil {
 				return &ComponentNotFoundError{
 					Name: target,
+					err:  err,
 				}
 			}
 			depKey := fmt.Sprintf("depends.%v", task)
-			rawDepends := component.GetValue(depKey)
+			rawDepends := component.GetValues(depKey)
 			// we have dependencies
 			for _, depend := range rawDepends {
 				err := addDeps(project, depend, tasks[:index+1], reverseDeps)

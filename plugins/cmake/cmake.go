@@ -39,11 +39,11 @@ func (cb cmakeBuilder) Configure(config *build.BuildConfig) error {
 		return err
 	}
 	args := []string{}
-	keys := cb.component.ValueNames()
+	keys := cb.component.KeyNames()
 	for i := range keys {
 		fn, found := flagHandlers[keys[i]]
 		if found {
-			values, err := cb.component.ExpandValue(keys[i])
+			values, err := cb.component.ExpandValues(keys[i])
 			if err != nil {
 				return err
 			}

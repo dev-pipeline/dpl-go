@@ -32,11 +32,11 @@ func (ic *IniComponent) Name() string {
 	return ic.config.Name()
 }
 
-func (ic *IniComponent) ValueNames() []string {
+func (ic *IniComponent) KeyNames() []string {
 	return ic.config.KeyStrings()
 }
 
-func (ic *IniComponent) GetValue(name string) []string {
+func (ic *IniComponent) GetValues(name string) []string {
 	if ic.config.HasKey(name) {
 		return ic.config.Key(name).ValueWithShadows()
 	} else {
@@ -74,18 +74,18 @@ func (ic *IniComponent) expandRecursively(value string, count int) ([]string, er
 
 	iniComponent := ic
 	if len(component) != 0 {
-		var found bool
-		iniComponent, found = ic.project.getConfigComponent(component)
-		if !found {
-			return nil, errCantFindComponent
+		var err error
+		iniComponent, err = ic.project.getConfigComponent(component)
+		if err != nil {
+			return nil, err
 		}
 	}
 	if !iniComponent.config.HasKey(key) {
 		if iniComponent != ic {
 			return nil, errMissingKey
 		}
-		defaultComponent, found := iniComponent.project.getDefaultComponent()
-		if !found || !defaultComponent.config.HasKey(key) {
+		defaultComponent, err := iniComponent.project.getDefaultComponent()
+		if err != nil || !defaultComponent.config.HasKey(key) {
 			return nil, errMissingKey
 		}
 		iniComponent = defaultComponent
@@ -108,7 +108,7 @@ func (ic *IniComponent) expandRecursively(value string, count int) ([]string, er
 }
 
 func (ic *IniComponent) expandValueInternal(name string, count int) ([]string, error) {
-	rawValues := ic.GetValue(name)
+	rawValues := ic.GetValues(name)
 	if rawValues == nil {
 		return nil, nil
 	}
@@ -123,12 +123,12 @@ func (ic *IniComponent) expandValueInternal(name string, count int) ([]string, e
 	return ret, nil
 }
 
-func (ic *IniComponent) ExpandValue(name string) ([]string, error) {
+func (ic *IniComponent) ExpandValues(name string) ([]string, error) {
 	return ic.expandValueInternal(name, 0)
 }
 
-func (ic *IniComponent) SetValue(name string, values []string) {
-	ic.EraseValue(name)
+func (ic *IniComponent) SetValues(name string, values []string) {
+	ic.EraseKey(name)
 	if len(values) > 0 {
 		key, _ := ic.config.NewKey(name, values[0])
 		for _, value := range values[1:] {
@@ -137,7 +137,7 @@ func (ic *IniComponent) SetValue(name string, values []string) {
 	}
 }
 
-func (ic *IniComponent) EraseValue(name string) {
+func (ic *IniComponent) EraseKey(name string) {
 	ic.config.DeleteKey(name)
 }
 
@@ -163,43 +163,43 @@ type IniProject struct {
 	dirty      bool
 }
 
-func (ip *IniProject) getAnyComponent(name string) (*IniComponent, bool) {
+func (ip *IniProject) getAnyComponent(name string) (*IniComponent, error) {
 	section, err := ip.config.GetSection(name)
 	if err != nil {
-		return nil, false
+		return nil, errCantFindComponent
 	}
 	return &IniComponent{
 		config:  section,
 		project: ip,
-	}, true
+	}, nil
 }
 
-func (ip *IniProject) getDefaultComponent() (*IniComponent, bool) {
+func (ip *IniProject) getDefaultComponent() (*IniComponent, error) {
 	return ip.getAnyComponent(ini.DefaultSection)
 }
 
-func (ip *IniProject) getConfigComponent(name string) (*IniComponent, bool) {
+func (ip *IniProject) getConfigComponent(name string) (*IniComponent, error) {
 	if name == ini.DefaultSection {
-		return nil, false
+		return nil, errCantFindComponent
 	}
 	if strings.HasPrefix(name, "dpl.") {
-		return nil, false
+		return nil, errCantFindComponent
 	}
 	component, err := ip.config.GetSection(name)
 	if err != nil {
-		return nil, false
+		return nil, err
 	}
 	return &IniComponent{
 		config:  component,
 		project: ip,
-	}, true
+	}, nil
 }
 
-func (ip *IniProject) GetComponent(name string) (dpl.Component, bool) {
+func (ip *IniProject) GetComponent(name string) (dpl.Component, error) {
 	return ip.getConfigComponent(name)
 }
 
-func (ip *IniProject) Components() []string {
+func (ip *IniProject) ComponentNames() []string {
 	ret := []string{}
 	rawNames := ip.config.SectionStrings()[1:]
 	for i := range rawNames {

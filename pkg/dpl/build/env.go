@@ -63,11 +63,11 @@ func makeEnvMap(component dpl.Component) (environmentChanges, error) {
 		prependValues: environmentMap{},
 		appendValues:  environmentMap{},
 	}
-	configKeys := component.ValueNames()
+	configKeys := component.KeyNames()
 	for index := range configKeys {
 		groups := envPattern.FindStringSubmatch(configKeys[index])
 		if groups != nil {
-			expandedValues, err := component.ExpandValue(configKeys[index])
+			expandedValues, err := component.ExpandValues(configKeys[index])
 			if err != nil {
 				return environmentChanges{}, err
 			}

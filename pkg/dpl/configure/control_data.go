@@ -35,11 +35,11 @@ func getControlData(project *IniProject, sourceDirAbsPath string) (controlData, 
 	ret := controlData{
 		fields: map[string][]string{},
 	}
-	controlSection, found := project.getAnyComponent(controlSectionName)
-	if !found {
-		return ret, nil
+	controlSection, err := project.getAnyComponent(controlSectionName)
+	if err != nil {
+		return ret, err
 	}
-	subfiles, err := controlSection.ExpandValue(subfilesKey)
+	subfiles, err := controlSection.ExpandValues(subfilesKey)
 	if err != nil {
 		return ret, err
 	}
@@ -59,9 +59,9 @@ func applyControlData(project *IniProject, cd controlData) error {
 		config:  section,
 		project: project,
 	}
-	iniComponent.SetValue(subfilesKey, cd.subfiles)
+	iniComponent.SetValues(subfilesKey, cd.subfiles)
 	for k, v := range cd.fields {
-		iniComponent.SetValue(k, v)
+		iniComponent.SetValues(k, v)
 	}
 	return nil
 }
@@ -94,7 +94,7 @@ func setupFlags(cf *ConfigureFlags, controlComponent *IniComponent) error {
 		{key: overridesKey, field: &cf.Overrides},
 	}
 	for i := range multipleMapper {
-		values := controlComponent.GetValue(multipleMapper[i].key)
+		values := controlComponent.GetValues(multipleMapper[i].key)
 		*multipleMapper[i].field = values
 	}
 	return nil
@@ -115,7 +115,7 @@ func projectUpToDate(modTime time.Time, controlComponent *IniComponent) (Configu
 	if modTime.Before(fileInfo.ModTime()) {
 		return cf, errProjectOutOfDate
 	}
-	subfiles := controlComponent.GetValue(subfilesKey)
+	subfiles := controlComponent.GetValues(subfilesKey)
 	for i := range subfiles {
 		fileInfo, err := os.Stat(subfiles[i])
 		if err != nil {

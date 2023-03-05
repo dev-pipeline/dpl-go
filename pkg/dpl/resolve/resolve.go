@@ -34,10 +34,11 @@ func GetResolver(name string) ResolveFn {
 
 type ComponentNotFoundError struct {
 	Name string
+	err  error
 }
 
 func (cnfe *ComponentNotFoundError) Error() string {
-	return fmt.Sprintf("Couldn't find component: %v", cnfe.Name)
+	return fmt.Sprintf("Couldn't find component %v (%v)", cnfe.Name, cnfe.err)
 }
 
 func makeComponentTask(component string, task string) string {

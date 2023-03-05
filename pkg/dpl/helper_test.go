@@ -9,7 +9,7 @@ func (tc *trivialComponent) Name() string {
 	return tc.ComponentName
 }
 
-func (tc *trivialComponent) ValueNames() []string {
+func (tc *trivialComponent) KeyNames() []string {
 	ret := []string{}
 	for key := range tc.Data {
 		ret = append(ret, key)
@@ -17,18 +17,18 @@ func (tc *trivialComponent) ValueNames() []string {
 	return ret
 }
 
-func (tc *trivialComponent) GetValue(key string) []string {
+func (tc *trivialComponent) GetValues(key string) []string {
 	return tc.Data[key]
 }
 
-func (tc *trivialComponent) ExpandValue(key string) ([]string, error) {
-	return tc.GetValue(key), nil
+func (tc *trivialComponent) ExpandValues(key string) ([]string, error) {
+	return tc.GetValues(key), nil
 }
 
-func (tc *trivialComponent) SetValue(string, []string) {
+func (tc *trivialComponent) SetValues(string, []string) {
 }
 
-func (tc *trivialComponent) EraseValue(string) {
+func (tc *trivialComponent) EraseKey(string) {
 }
 
 func (tc *trivialComponent) GetSourceDir() string {

@@ -21,12 +21,12 @@ func loadProfiles(configRoot string, profiles []string) (modifierSet, error) {
 }
 
 func applyProfiles(modSet modifierSet, project dpl.Project) error {
-	for _, componentName := range project.Components() {
-		component, found := project.GetComponent(componentName)
-		if !found {
-			return fmt.Errorf("internal error; component %v not found", componentName)
+	for _, componentName := range project.ComponentNames() {
+		component, err := project.GetComponent(componentName)
+		if err != nil {
+			return err
 		}
-		err := applyComponentModifiers(component, modSet)
+		err = applyComponentModifiers(component, modSet)
 		if err != nil {
 			return err
 		}

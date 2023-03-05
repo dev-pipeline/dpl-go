@@ -15,7 +15,7 @@ func loadOverride(overridePath string, modSet modifierSet) error {
 
 func applyOverrides(configRoot string, overrides []string, project dpl.Project) error {
 	overridesDir := path.Join(configRoot, "overrides.d")
-	for _, componentName := range project.Components() {
+	for _, componentName := range project.ComponentNames() {
 		modSet := newModifierSet()
 		for _, override := range overrides {
 			overridePath := path.Join(overridesDir, componentName, fmt.Sprintf("%v.conf", override))
@@ -28,11 +28,11 @@ func applyOverrides(configRoot string, overrides []string, project dpl.Project) 
 				return err
 			}
 		}
-		component, found := project.GetComponent(componentName)
-		if !found {
-			return fmt.Errorf("internal error; component %v not found", componentName)
+		component, err := project.GetComponent(componentName)
+		if err != nil {
+			return err
 		}
-		err := applyComponentModifiers(component, modSet)
+		err = applyComponentModifiers(component, modSet)
 		if err != nil {
 			return err
 		}

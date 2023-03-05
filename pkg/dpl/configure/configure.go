@@ -116,14 +116,14 @@ func configureFromScratch(flags ConfigureFlags) (*IniProject, error) {
 	controlData.fields[sourceDirKey] = []string{sourceDirAbsPath}
 	controlData.fields[workDirKey] = []string{workDirAbsPath}
 
-	components := project.Components()
+	components := project.ComponentNames()
 	for i := range components {
-		component, found := project.GetComponent(components[i])
-		if !found {
+		component, err := project.GetComponent(components[i])
+		if err != nil {
 			return nil, err
 		}
-		component.SetValue(sourceDirKey, []string{path.Join(sourceDirAbsPath, component.Name())})
-		component.SetValue(workDirKey, []string{path.Join(workDirAbsPath, component.Name())})
+		component.SetValues(sourceDirKey, []string{path.Join(sourceDirAbsPath, component.Name())})
+		component.SetValues(workDirKey, []string{path.Join(workDirAbsPath, component.Name())})
 	}
 	err = applyControlData(project, controlData)
 	if err != nil {
@@ -168,8 +168,8 @@ func DoReconfigure(flags ReconfigureFlags, args []string) {
 	if !ok {
 		log.Fatalf("Project wasn't created using 'configure'")
 	}
-	controlComponent, found := realProject.getAnyComponent(controlSectionName)
-	if !found {
+	controlComponent, err := realProject.getAnyComponent(controlSectionName)
+	if err != nil {
 		log.Fatalf("Error: %v", errNoControlData)
 	}
 	cf := ConfigureFlags{}
@@ -210,8 +210,8 @@ func loadExistingProject(cacheDir string) (dpl.Project, error) {
 		return nil, err
 	}
 
-	controlComponent, found := project.getAnyComponent(controlSectionName)
-	if !found {
+	controlComponent, err := project.getAnyComponent(controlSectionName)
+	if err != nil {
 		return nil, errNoControlData
 	}
 	config, err := projectUpToDate(info.ModTime(), controlComponent)

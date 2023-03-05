@@ -20,7 +20,7 @@ var (
 )
 
 func checkout(component dpl.Component) error {
-	scmUris, err := component.ExpandValue(scmUriKey)
+	scmUris, err := component.ExpandValues(scmUriKey)
 	if err != nil {
 		return err
 	}

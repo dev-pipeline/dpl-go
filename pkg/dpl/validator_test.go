@@ -5,6 +5,10 @@ import (
 	"testing"
 )
 
+var (
+	errComponentError error = fmt.Errorf("error finding Component")
+)
+
 const (
 	testValidatorName string = "some-test-validator"
 )
@@ -67,11 +71,11 @@ func TestDplPrefix(t *testing.T) {
 type invalidProject struct {
 }
 
-func (invalidProject) GetComponent(string) (Component, bool) {
-	return nil, false
+func (invalidProject) GetComponent(string) (Component, error) {
+	return nil, errComponentError
 }
 
-func (invalidProject) Components() []string {
+func (invalidProject) ComponentNames() []string {
 	return []string{}
 }
 

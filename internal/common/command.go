@@ -89,9 +89,9 @@ func startResolve(project dpl.Project, resolver resolve.Resolver, taskMap map[st
 				if len(taskChunks) != 2 {
 					log.Fatalf("Internal error: improper extraction of task '%v'", taskChunks)
 				}
-				component, found := project.GetComponent(taskChunks[0])
-				if !found {
-					log.Fatalf("Internal error: cannot get component %v", taskChunks[0])
+				component, err := project.GetComponent(taskChunks[0])
+				if err != nil {
+					log.Fatalf("Internal error: cannot get component %v (%v)", taskChunks[0], err)
 				}
 				workFn, found := taskMap[taskChunks[1]]
 				if !found {
@@ -182,7 +182,7 @@ func DoCommand(components []string, args Args, tasks []Task) {
 	}
 
 	if len(components) == 0 {
-		components = project.Components()
+		components = project.ComponentNames()
 	}
 	resolveFn := resolve.GetResolver(args.Dependencies)
 	if resolveFn == nil {

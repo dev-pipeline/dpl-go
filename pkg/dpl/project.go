@@ -8,18 +8,18 @@ import (
 
 type Component interface {
 	Name() string
-	ValueNames() []string
-	GetValue(string) []string
-	ExpandValue(string) ([]string, error)
-	SetValue(string, []string)
-	EraseValue(string)
+	KeyNames() []string
+	GetValues(key string) []string
+	ExpandValues(key string) ([]string, error)
+	SetValues(key string, values []string)
+	EraseKey(key string)
 	GetSourceDir() string
 	GetWorkDir() string
 }
 
 type Project interface {
-	GetComponent(string) (Component, bool)
-	Components() []string
+	GetComponent(string) (Component, error)
+	ComponentNames() []string
 	Write() error
 }
 

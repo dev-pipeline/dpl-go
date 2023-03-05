@@ -7,16 +7,16 @@ import (
 )
 
 func compareProject(t *testing.T, project dpl.Project, expected map[string]map[string][]string) {
-	if len(project.Components()) != len(expected) {
-		t.Fatalf("Mismatched lengths (%v vs %v)", len(project.Components()), len(expected))
+	if len(project.ComponentNames()) != len(expected) {
+		t.Fatalf("Mismatched lengths (%v vs %v)", len(project.ComponentNames()), len(expected))
 	}
 	for componentName, valueMap := range expected {
-		component, found := project.GetComponent(componentName)
-		if !found {
-			t.Fatalf("Missing component %v", componentName)
+		component, err := project.GetComponent(componentName)
+		if err != nil {
+			t.Fatalf("Missing component %v (%v)", componentName, err)
 		}
 		for keyName, values := range valueMap {
-			actualValues, err := component.ExpandValue(keyName)
+			actualValues, err := component.ExpandValues(keyName)
 			if err != nil {
 				t.Fatalf("Unexpected error: %v", err)
 			}

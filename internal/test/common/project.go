@@ -1,7 +1,13 @@
 package testcommon
 
 import (
+	"fmt"
+
 	"github.com/dev-pipeline/dpl-go/pkg/dpl"
+)
+
+var (
+	errMissingComponent error = fmt.Errorf("missing component")
 )
 
 type ResolveComponent struct {
@@ -12,11 +18,11 @@ func (rs *ResolveComponent) Name() string {
 	return ""
 }
 
-func (rs *ResolveComponent) ValueNames() []string {
+func (rs *ResolveComponent) KeyNames() []string {
 	return nil
 }
 
-func (rs *ResolveComponent) GetValue(key string) []string {
+func (rs *ResolveComponent) GetValues(key string) []string {
 	value, found := rs.Data[key]
 	if found {
 		return value
@@ -24,14 +30,14 @@ func (rs *ResolveComponent) GetValue(key string) []string {
 	return nil
 }
 
-func (rs *ResolveComponent) ExpandValue(key string) ([]string, error) {
-	return rs.GetValue(key), nil
+func (rs *ResolveComponent) ExpandValues(key string) ([]string, error) {
+	return rs.GetValues(key), nil
 }
 
-func (rs *ResolveComponent) SetValue(string, []string) {
+func (rs *ResolveComponent) SetValues(string, []string) {
 }
 
-func (rs *ResolveComponent) EraseValue(string) {
+func (rs *ResolveComponent) EraseKey(string) {
 }
 
 func (rs *ResolveComponent) GetSourceDir() string {
@@ -48,15 +54,15 @@ type ResolveProject struct {
 	Comps ResolveComponents
 }
 
-func (rp *ResolveProject) GetComponent(name string) (dpl.Component, bool) {
+func (rp *ResolveProject) GetComponent(name string) (dpl.Component, error) {
 	component, found := rp.Comps[name]
 	if found {
-		return &component, true
+		return &component, nil
 	}
-	return nil, false
+	return nil, errMissingComponent
 }
 
-func (rp *ResolveProject) Components() []string {
+func (rp *ResolveProject) ComponentNames() []string {
 	names := []string{}
 	for name := range rp.Comps {
 		names = append(names, name)

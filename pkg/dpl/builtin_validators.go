@@ -40,7 +40,7 @@ func (ifne *InvalidFieldNameError) Error() string {
 }
 
 func validateFieldName(component Component) error {
-	for _, name := range component.ValueNames() {
+	for _, name := range component.KeyNames() {
 		matched := legalFieldName.Match([]byte(name))
 		if !matched {
 			return &InvalidFieldNameError{

@@ -24,7 +24,7 @@ func (tmve *TooManyValuesError) Error() string {
 }
 
 func GetSingleComponentValue(component Component, key string) (string, error) {
-	vals, err := component.ExpandValue(key)
+	vals, err := component.ExpandValues(key)
 	if err != nil {
 		return "", err
 	}

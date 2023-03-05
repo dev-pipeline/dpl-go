@@ -45,7 +45,7 @@ func findArtifact(startDir string, filename string) (string, error) {
 }
 
 func findAllArtifacts(component dpl.Component, key string, startDir string) error {
-	buildArtifacts, err := component.ExpandValue(key)
+	buildArtifacts, err := component.ExpandValues(key)
 	if err != nil {
 		return err
 	}
@@ -61,7 +61,7 @@ func findAllArtifacts(component dpl.Component, key string, startDir string) erro
 			return err
 		}
 		nextKey := fmt.Sprintf("dpl.build.artifact_path.%v", key)
-		component.SetValue(nextKey, []string{fullPath})
+		component.SetValues(nextKey, []string{fullPath})
 	}
 	return nil
 }

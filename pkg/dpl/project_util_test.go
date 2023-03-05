@@ -102,22 +102,22 @@ func (*erroringComponent) Name() string {
 	return ""
 }
 
-func (*erroringComponent) ValueNames() []string {
+func (*erroringComponent) KeyNames() []string {
 	return []string{}
 }
 
-func (*erroringComponent) GetValue(string) []string {
+func (*erroringComponent) GetValues(string) []string {
 	return []string{}
 }
 
-func (ec *erroringComponent) ExpandValue(string) ([]string, error) {
+func (ec *erroringComponent) ExpandValues(string) ([]string, error) {
 	return nil, ec.err
 }
 
-func (*erroringComponent) SetValue(string, []string) {
+func (*erroringComponent) SetValues(string, []string) {
 }
 
-func (*erroringComponent) EraseValue(string) {
+func (*erroringComponent) EraseKey(string) {
 }
 
 func (*erroringComponent) GetSourceDir() string {

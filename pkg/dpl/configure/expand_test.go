@@ -17,7 +17,7 @@ func TestNoExpand(t *testing.T) {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 	foo, _ := project.GetComponent("foo")
-	expandedValues, err := foo.ExpandValue("a")
+	expandedValues, err := foo.ExpandValues("a")
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
@@ -42,7 +42,7 @@ func TestSingleExpand(t *testing.T) {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 	foo, _ := project.GetComponent("foo")
-	expandedValues, err := foo.ExpandValue("a")
+	expandedValues, err := foo.ExpandValues("a")
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
@@ -67,7 +67,7 @@ func TestLeadingExpand(t *testing.T) {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 	foo, _ := project.GetComponent("foo")
-	expandedValues, err := foo.ExpandValue("a")
+	expandedValues, err := foo.ExpandValues("a")
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
@@ -92,7 +92,7 @@ func TestTrailingExpand(t *testing.T) {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 	foo, _ := project.GetComponent("foo")
-	expandedValues, err := foo.ExpandValue("a")
+	expandedValues, err := foo.ExpandValues("a")
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
@@ -118,7 +118,7 @@ func TestCrossExpand(t *testing.T) {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 	foo, _ := project.GetComponent("foo")
-	expandedValues, err := foo.ExpandValue("a")
+	expandedValues, err := foo.ExpandValues("a")
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
@@ -144,7 +144,7 @@ func TestCrossExpandSubKey(t *testing.T) {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 	foo, _ := project.GetComponent("foo")
-	expandedValues, err := foo.ExpandValue("a")
+	expandedValues, err := foo.ExpandValues("a")
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
@@ -171,7 +171,7 @@ func TestCrossExpandLocal(t *testing.T) {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 	foo, _ := project.GetComponent("foo")
-	expandedValues, err := foo.ExpandValue("a")
+	expandedValues, err := foo.ExpandValues("a")
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
@@ -197,7 +197,7 @@ func TestCrossKeyFailure(t *testing.T) {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 	foo, _ := project.GetComponent("foo")
-	_, err = foo.ExpandValue("a")
+	_, err = foo.ExpandValues("a")
 	if err == nil {
 		t.Fatalf("Missing expected error")
 	}
@@ -217,7 +217,7 @@ func TestCrossComponentFailure(t *testing.T) {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 	foo, _ := project.GetComponent("foo")
-	_, err = foo.ExpandValue("a")
+	_, err = foo.ExpandValues("a")
 	if err == nil {
 		t.Fatalf("Missing expected error")
 	}
@@ -236,7 +236,7 @@ func TestMultiExpand(t *testing.T) {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 	foo, _ := project.GetComponent("foo")
-	expandedValues, err := foo.ExpandValue("a")
+	expandedValues, err := foo.ExpandValues("a")
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
@@ -262,7 +262,7 @@ func TestRecursiveExpand(t *testing.T) {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 	foo, _ := project.GetComponent("foo")
-	expandedValues, err := foo.ExpandValue("a")
+	expandedValues, err := foo.ExpandValues("a")
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
@@ -288,7 +288,7 @@ func TestExpandEmpty(t *testing.T) {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 	foo, _ := project.GetComponent("foo")
-	expandedValues, err := foo.ExpandValue("a")
+	expandedValues, err := foo.ExpandValues("a")
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
@@ -315,7 +315,7 @@ func TestExpandLimit(t *testing.T) {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 	foo, _ := project.GetComponent("foo")
-	_, err = foo.ExpandValue("a")
+	_, err = foo.ExpandValues("a")
 	if err == nil {
 		t.Fatalf("Missing expected error")
 	}

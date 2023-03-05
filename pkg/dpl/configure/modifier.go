@@ -78,21 +78,21 @@ func newModifierSet() modifierSet {
 
 func applyComponentModifiers(component dpl.Component, modifiers modifierSet) error {
 	for key, prepends := range modifiers.prependValues {
-		originalValues := component.GetValue(key)
-		component.SetValue(key, append(prepends, originalValues...))
+		originalValues := component.GetValues(key)
+		component.SetValues(key, append(prepends, originalValues...))
 	}
 
 	for key, appends := range modifiers.appendValues {
-		originalValues := component.GetValue(key)
-		component.SetValue(key, append(originalValues, appends...))
+		originalValues := component.GetValues(key)
+		component.SetValues(key, append(originalValues, appends...))
 	}
 
 	for key, overrides := range modifiers.overrideValues {
-		component.SetValue(key, overrides)
+		component.SetValues(key, overrides)
 	}
 
 	for key := range modifiers.eraseValues {
-		component.EraseValue(key)
+		component.EraseKey(key)
 	}
 	return nil
 }
