@@ -14,12 +14,12 @@ var (
 	buildCmd = &cobra.Command{
 		Use:   "build",
 		Short: "Build a dpl project",
-		Run:   doBuildCmd,
+		RunE:  doBuildCmd,
 	}
 )
 
-func doBuildCmd(cmd *cobra.Command, args []string) {
-	common.DoCommand(args, buildCommon, []common.Task{
+func doBuildCmd(cmd *cobra.Command, args []string) error {
+	return common.DoCommand(args, buildCommon, []common.Task{
 		BuildTask,
 	})
 }

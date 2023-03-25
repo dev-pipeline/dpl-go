@@ -16,12 +16,12 @@ var (
 	bootstrapCmd = &cobra.Command{
 		Use:   "bootstrap",
 		Short: "Bootstrap a dpl project",
-		Run:   doBootstrap,
+		RunE:  doBootstrap,
 	}
 )
 
-func doBootstrap(cmd *cobra.Command, args []string) {
-	common.DoCommand(args, bootstrapCommon, []common.Task{
+func doBootstrap(cmd *cobra.Command, args []string) error {
+	return common.DoCommand(args, bootstrapCommon, []common.Task{
 		scm.CheckoutTask,
 		build.BuildTask,
 	})

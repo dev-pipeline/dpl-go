@@ -28,7 +28,8 @@ const (
 )
 
 var (
-	errNoControlData error = fmt.Errorf("no control data")
+	errNoControlData    error = fmt.Errorf("no control data")
+	errWrongProjectType error = fmt.Errorf("project wasn't created using 'configure'")
 )
 
 func (f ConfigureFlags) getBuildDir() string {
@@ -146,11 +147,9 @@ func configureFromScratch(flags ConfigureFlags) (*IniProject, error) {
 	return project, nil
 }
 
-func DoConfigure(flags ConfigureFlags, args []string) {
+func DoConfigure(flags ConfigureFlags, args []string) error {
 	_, err := configureFromScratch(flags)
-	if err != nil {
-		log.Fatalf("Error configuring project: %v", err)
-	}
+	return err
 }
 
 type ReconfigureFlags struct {
@@ -159,23 +158,23 @@ type ReconfigureFlags struct {
 	Profiles  []string
 }
 
-func DoReconfigure(flags ReconfigureFlags, args []string) {
+func DoReconfigure(flags ReconfigureFlags, args []string) error {
 	project, err := dpl.LoadProject()
 	if err != nil {
-		log.Fatalf("Failed to load project: %v", err)
+		return err
 	}
 	realProject, ok := project.(*IniProject)
 	if !ok {
-		log.Fatalf("Project wasn't created using 'configure'")
+		return errWrongProjectType
 	}
 	controlComponent, err := realProject.getAnyComponent(controlSectionName)
 	if err != nil {
-		log.Fatalf("Error: %v", errNoControlData)
+		return errNoControlData
 	}
 	cf := ConfigureFlags{}
 	err = setupFlags(&cf, controlComponent)
 	if err != nil {
-		log.Fatalf("Error: %v", err)
+		return err
 	}
 
 	if len(flags.Overrides) != 0 {
@@ -193,9 +192,7 @@ func DoReconfigure(flags ReconfigureFlags, args []string) {
 		}
 	}
 	project, err = configureFromScratch(cf)
-	if err != nil {
-		log.Fatalf("Error: %v", err)
-	}
+	return err
 }
 
 func loadExistingProject(cacheDir string) (dpl.Project, error) {

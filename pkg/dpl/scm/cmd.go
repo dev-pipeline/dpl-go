@@ -14,12 +14,12 @@ var (
 	checkoutCmd = &cobra.Command{
 		Use:   "checkout",
 		Short: "Checkout a dpl project",
-		Run:   doCheckout,
+		RunE:  doCheckout,
 	}
 )
 
-func doCheckout(cmd *cobra.Command, components []string) {
-	common.DoCommand(components, args, []common.Task{
+func doCheckout(cmd *cobra.Command, components []string) error {
+	return common.DoCommand(components, args, []common.Task{
 		CheckoutTask,
 	})
 }

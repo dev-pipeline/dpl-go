@@ -18,8 +18,9 @@ var (
 	versionCmd = &cobra.Command{
 		Use:   "version",
 		Short: "Print the version number of dpl",
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			fmt.Printf("dev-pipeline %v\n", fullVersion)
+			return nil
 		},
 	}
 )

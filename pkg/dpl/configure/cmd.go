@@ -13,16 +13,16 @@ var (
 	configureCmd = &cobra.Command{
 		Use:   "configure",
 		Short: "Configure a dpl project",
-		Run: func(cmd *cobra.Command, args []string) {
-			DoConfigure(configureFlags, args)
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return DoConfigure(configureFlags, args)
 		},
 	}
 
 	reconfigureCmd = &cobra.Command{
 		Use:   "reconfigure",
 		Short: "Reconfigure an existing configuration",
-		Run: func(cmd *cobra.Command, args []string) {
-			DoReconfigure(reconfigureFlags, args)
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return DoReconfigure(reconfigureFlags, args)
 		},
 	}
 )

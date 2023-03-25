@@ -1,6 +1,7 @@
 package common
 
 import (
+	"fmt"
 	"log"
 	"strings"
 	"sync"
@@ -175,10 +176,10 @@ func runTasks(project dpl.Project, components []string, tasks []Task, resolveFn 
 	return errors[0]
 }
 
-func DoCommand(components []string, args Args, tasks []Task) {
+func DoCommand(components []string, args Args, tasks []Task) error {
 	project, err := dpl.LoadProject()
 	if err != nil {
-		log.Fatalf("Failed to load project: %v", err)
+		return fmt.Errorf("failed to load project: %v", err)
 	}
 
 	if len(components) == 0 {
@@ -186,12 +187,9 @@ func DoCommand(components []string, args Args, tasks []Task) {
 	}
 	resolveFn := resolve.GetResolver(args.Dependencies)
 	if resolveFn == nil {
-		log.Fatalf("No resolver '%v'", args.Dependencies)
-	} else {
-		err := runTasks(project, components, tasks, resolveFn, args.KeepGoing, args.MaxTasks)
-		project.Write()
-		if err != nil {
-			log.Fatalf("Error: %v", err)
-		}
+		return fmt.Errorf("no resolver '%v'", args.Dependencies)
 	}
+	err = runTasks(project, components, tasks, resolveFn, args.KeepGoing, args.MaxTasks)
+	project.Write()
+	return err
 }
