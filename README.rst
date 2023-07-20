@@ -4,11 +4,12 @@ dpl-go
 |code-climate|
 |go-report-card|
 
-This is a rewrite of `dev-pipeline`_ in golang.  The python code evolved
+This is a rewrite of `dev-pipeline`_ in Go.  The python code evolved
 from a quick and dirty scripts for my own use into a project that I as
 figuring out as I went along, and the code reflects that history.  In
-addition, there are several pain points with python.  Golang solves a
-number of my pain points, hence that choice.
+addition, there are several pain points with python (mostly around
+testing everything and parallelism); Go either solves or completely
+eliminates those pain points.
 
 This project is designed to be a mostly drop-in replacement, but with
 smaller short-term goals.  Instead of aiming for maximum flexibility and
@@ -16,6 +17,32 @@ keeping everything as a plugin (like the python version), it will be (at
 least for now) much more focused on my needs and common use cases.
 Eventually I expect to support plugins, but that's not a high priority
 at the moment.
+
+Installing
+----------
+:code:`dpl` is only released via source.  Make sure you have an
+up-to-date Go installed and run the following in your terminal:
+
+.. code-block:: bash
+
+    $ go install github.com/dev-pipeline/dpl-go
+    $
+
+If that works, you'll have :code:`dpl-go` as an executable in
+:code:`$GOROOT/bin`.  If you prefer the name :code:`dpl`, the included
+:code:`Makefile` will do the trick.
+
+.. code-block:: bash
+
+    /path/to/dpl/src $ make
+    /path/to/dpl/src $ make install
+
+You can specify an optional destination directory by setting
+:code:`DESTDIR` during the call to :code:`make install`.
+
+.. code-block:: bash
+
+    /path/to/dpl/src $ DESTDIR=/usr/local/bin make install
 
 .. _dev-pipeline: https://github.com/dev-pipeline/dev-pipeline
 
