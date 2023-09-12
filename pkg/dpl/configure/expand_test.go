@@ -280,7 +280,7 @@ func TestExpandEmpty(t *testing.T) {
 			[foo]
 			a = ${b}
 			b = hello
-			b = <empty>
+			b = \e
 		`),
 	)
 
@@ -300,6 +300,86 @@ func TestExpandEmpty(t *testing.T) {
 	}
 	if expandedValues[1] != "" {
 		t.Fatalf("Unexpected result: %v", expandedValues[1])
+	}
+}
+
+func TestEscapeNothing(t *testing.T) {
+	value, err := escapeValue(`hello`)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	if value != `hello` {
+		t.Fatalf("Unexpected result: %v", value)
+	}
+}
+
+func TestEscapeDoubleSlashes(t *testing.T) {
+	value, err := escapeValue(`\\\\`)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	if value != `\\` {
+		t.Fatalf("Unexpected result: %v", value)
+	}
+}
+
+func TestEscapeLiteralPrefix(t *testing.T) {
+	value, err := escapeValue(`\\hello`)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	if value != `\hello` {
+		t.Fatalf("Unexpected result: %v", value)
+	}
+}
+
+func TestEscapeLiteralMiddle(t *testing.T) {
+	value, err := escapeValue(`hel\\lo`)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	if value != `hel\lo` {
+		t.Fatalf("Unexpected result: %v", value)
+	}
+}
+
+func TestEscapeEmptyPrefix(t *testing.T) {
+	value, err := escapeValue(`\ehello`)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	if value != "hello" {
+		t.Fatalf("Unexpected result: %v", value)
+	}
+}
+
+func TestEscapeEmptyMiddle(t *testing.T) {
+	value, err := escapeValue(`hel\elo`)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	if value != "hello" {
+		t.Fatalf("Unexpected result: %v", value)
+	}
+}
+
+func TestEscapeConsecutiveEmpty(t *testing.T) {
+	value, err := escapeValue(`\e\e\e\ehello`)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	if value != "hello" {
+		t.Fatalf("Unexpected result: %v", value)
+	}
+}
+
+func TestEscapeTrailingEmpty(t *testing.T) {
+	value, err := escapeValue(`hello\e\e\e`)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	if value != "hello" {
+		t.Fatalf("Unexpected result: %v", value)
 	}
 }
 

@@ -18,9 +18,10 @@ var (
 	expandedPattern     *regexp.Regexp
 	reservedNamePattern *regexp.Regexp
 
-	errCantFindComponent error = errors.New("couldn't find component")
-	errMissingKey        error = errors.New("missing key")
-	errTooManyExpansions error = errors.New("too many expansions")
+	errCantFindComponent     error = errors.New("couldn't find component")
+	errMissingKey            error = errors.New("missing key")
+	errTooManyExpansions     error = errors.New("too many expansions")
+	errMissingEscapeSequence error = errors.New("missing escape sequence")
 )
 
 type IniComponent struct {
@@ -63,9 +64,6 @@ func (ic *IniComponent) expandRecursively(value string, count int) ([]string, er
 	groups := expandedPattern.FindStringSubmatch(value)
 	if groups == nil {
 		// done expanding
-		if value == "<empty>" {
-			return []string{""}, nil
-		}
 		return []string{value}, nil
 	}
 	prefix := groups[1]
@@ -107,6 +105,36 @@ func (ic *IniComponent) expandRecursively(value string, count int) ([]string, er
 	return ret, nil
 }
 
+var (
+	specialEscapes map[byte]string = map[byte]string{
+		'e': "",
+	}
+)
+
+func escapeValue(value string) (string, error) {
+	sb := strings.Builder{}
+	lastIndex := 0
+	for {
+		ss := value[lastIndex:]
+		index := strings.Index(ss, `\`)
+		if index == -1 {
+			sb.WriteString(ss)
+			return sb.String(), nil
+		}
+		if index == len(value)-1 {
+			return "", errMissingEscapeSequence
+		} else {
+			sb.WriteString(ss[:index])
+			if specialString, found := specialEscapes[value[index+1]]; found {
+				sb.WriteString(specialString)
+			} else {
+				sb.WriteByte(value[index+1])
+			}
+			lastIndex += 2 + index
+		}
+	}
+}
+
 func (ic *IniComponent) expandValueInternal(name string, count int) ([]string, error) {
 	rawValues := ic.GetValues(name)
 	if rawValues == nil {
@@ -117,6 +145,12 @@ func (ic *IniComponent) expandValueInternal(name string, count int) ([]string, e
 		expandedValues, err := ic.expandRecursively(rawValues[index], count)
 		if err != nil {
 			return nil, err
+		}
+		for index := range expandedValues {
+			expandedValues[index], err = escapeValue(expandedValues[index])
+			if err != nil {
+				return nil, err
+			}
 		}
 		ret = append(ret, expandedValues...)
 	}
