@@ -1,9 +1,9 @@
 module github.com/dev-pipeline/dpl-go
 
-go 1.20
+go 1.21
 
 require (
-	github.com/go-git/go-git/v5 v5.8.1
+	github.com/go-git/go-git/v5 v5.9.0
 	github.com/spf13/cobra v1.7.0
 	gopkg.in/ini.v1 v1.67.0
 )
