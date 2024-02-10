@@ -25,6 +25,8 @@ const (
 	cacheFileName string = "build.cache"
 
 	loaderString string = "configure"
+
+	customSourceDirKey string = "source_dir"
 )
 
 var (
@@ -119,11 +121,23 @@ func configureFromScratch(flags ConfigureFlags) (*IniProject, error) {
 
 	components := project.ComponentNames()
 	for i := range components {
-		component, err := project.GetComponent(components[i])
+		component, err := project.getConfigComponent(components[i])
 		if err != nil {
 			return nil, err
 		}
-		component.SetValues(sourceDirKey, []string{path.Join(sourceDirAbsPath, component.Name())})
+		sourceDir, err := component.GetSingleValue(customSourceDirKey)
+		if err != nil {
+			if err != errMissingKey {
+				return nil, err
+			}
+			// error is just a missing key, so nothing to worry about; use default source directory
+			sourceDir = path.Join(sourceDirAbsPath, component.Name())
+		} else {
+			if !path.IsAbs(sourceDir) {
+				sourceDir = path.Join(sourceDirAbsPath, sourceDir)
+			}
+		}
+		component.SetValues(sourceDirKey, []string{sourceDir})
 		component.SetValues(workDirKey, []string{path.Join(workDirAbsPath, component.Name())})
 	}
 	err = applyControlData(project, controlData)

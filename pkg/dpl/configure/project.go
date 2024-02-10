@@ -20,6 +20,7 @@ var (
 
 	errCantFindComponent     error = errors.New("couldn't find component")
 	errMissingKey            error = errors.New("missing key")
+	errTooManyValues         error = errors.New("too many values")
 	errTooManyExpansions     error = errors.New("too many expansions")
 	errMissingEscapeSequence error = errors.New("missing escape sequence")
 )
@@ -51,6 +52,20 @@ func (ic *IniComponent) GetValues(name string) []string {
 		}
 	}
 	return nil
+}
+
+func (ic *IniComponent) GetSingleValue(name string) (string, error) {
+	vals := ic.GetValues(name)
+	switch len(vals) {
+	case 0:
+		return "", errMissingKey
+
+	case 1:
+		return vals[0], nil
+
+	default:
+		return "", errTooManyValues
+	}
 }
 
 const (
